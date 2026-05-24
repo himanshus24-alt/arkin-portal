@@ -34,34 +34,21 @@ st.set_page_config(
 
 # =============================================================================
 # WHITESPACE FIX
-# Source: medium.com/codetodeploy + discuss.streamlit.io/t/21737/15
-#
-# Both sources confirm:
-#   - .stMainBlockContainer is the correct selector (Streamlit 1.40+)
-#   - .stAppHeader transparent = header floats, no visible gap underneath
-#   - No sidebar here so padding-top: 0rem is safe (no hamburger overlap)
-#   - st.html() with <style> is officially supported since Streamlit v1.45
+# .stMainBlockContainer padding-top:0 removes the gap.
+# .stAppHeader must be hidden (not just transparent) — visible:visible reserves space.
 # =============================================================================
 def fix_whitespace():
     st.html("""<style>
-/* Remove all top whitespace — confirmed working on Streamlit Cloud */
 .stMainBlockContainer {
-    padding-top: 0rem;
+    padding-top: 0rem !important;
     padding-bottom: 0rem;
     padding-left: 0rem;
     padding-right: 0rem;
     max-width: 480px;
 }
-
-/* Make the header transparent so it floats above content — no gap */
-.stAppHeader {
-    background-color: rgba(255, 255, 255, 0.0);
-    visibility: visible;
-}
-
-/* Hide Streamlit chrome */
-#MainMenu { visibility: hidden; }
-footer    { visibility: hidden; }
+.stAppHeader { display: none !important; }
+#MainMenu    { visibility: hidden; }
+footer       { visibility: hidden; }
 </style>""")
 
 # =============================================================================
@@ -372,9 +359,7 @@ def brand_bar(user, prod=None):
           <span class="bb-chip">{p}</span>
         </div>
       </div>
-      <button class="bb-logout" onclick="
-        window.parent.document.querySelector('button[data-testid=\\'logout_btn\\']').click();
-      ">🚪 Sign out</button>
+      <button class="bb-logout" onclick="var url=new URL(window.parent.location.href);url.searchParams.set('logout','1');window.parent.location.href=url.toString();">🚪 Sign out</button>
     </div>
     """)
 
@@ -436,17 +421,16 @@ def plotly_theme(fig, h=240):
 
 # =============================================================================
 # MONTH SELECTOR — inline selectbox, no sidebar needed
+# Don't pass index= when key= is used; Streamlit reads value from session_state.
 # =============================================================================
 def month_selector(key="month_sel"):
-    if key not in st.session_state:
+    if key not in st.session_state or st.session_state[key] not in MONTH_ORDER:
         st.session_state[key] = CURRENT_MONTH
     selected = st.selectbox(
         "📅 Viewing month",
         MONTH_ORDER,
-        index=MONTH_ORDER.index(st.session_state[key]),
         key=key,
     )
-    st.session_state[key] = selected
     return selected
 
 
@@ -816,8 +800,14 @@ def login_screen():
 # MAIN
 # =============================================================================
 def main():
-    # ── Fix whitespace FIRST, before anything else renders ───────────────
     fix_whitespace()
+
+    # ── Logout: query param set by Sign out button JS, checked before render ─
+    if st.query_params.get("logout") == "1":
+        st.query_params.clear()
+        st.session_state.clear()
+        st.rerun()
+
     inject_css()
     data = load_data()
 
@@ -828,23 +818,6 @@ def main():
     user = st.session_state["user"]
 
     st.markdown('<div class="page">', unsafe_allow_html=True)
-
-    # Hidden logout button — triggered by JS click from brand bar
-    # Styled to be invisible; sits outside the page flow
-    st.markdown("""
-<style>
-button[data-testid="logout_btn"] {
-    position: absolute !important;
-    width: 1px !important; height: 1px !important;
-    opacity: 0 !important; pointer-events: none !important;
-    overflow: hidden !important;
-}
-</style>
-""", unsafe_allow_html=True)
-    if st.button("logout", key="logout_btn"):
-        st.session_state.clear()
-        st.rerun()
-
     brand_bar(user)
 
     level = user["level"]
