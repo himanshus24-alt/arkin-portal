@@ -63,25 +63,61 @@ def inject_css():
     --sh-lg:   0 12px 32px rgba(15,61,62,0.12);
 }
 
-/* Strip Streamlit chrome */
-#MainMenu, footer, header[data-testid="stHeader"] { visibility: hidden; height: 0; }
-[data-testid="stToolbar"], [data-testid="stDecoration"] { display: none; }
-.stApp > header { height: 0 !important; }
-.block-container { padding: 0 !important; max-width: 480px !important; background: var(--cream); }
-.stApp { background: var(--cream); font-family: 'Inter', sans-serif; color: var(--ink1); }
+/* ═══════ STRIP ALL TOP WHITESPACE ═══════ */
+/* Streamlit's header bar */
+#MainMenu, footer { visibility: hidden; height: 0 !important; }
+header[data-testid="stHeader"],
+[data-testid="stHeader"] {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+}
+[data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
+.stApp > header { display: none !important; height: 0 !important; }
 
-/* Remove top whitespace band that Streamlit adds */
-.stApp [data-testid="stAppViewContainer"] > .main > div:first-child,
-[data-testid="stMainBlockContainer"] {
+/* Main app container padding */
+.stApp {
+    background: var(--cream);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink1);
+}
+.stApp [data-testid="stAppViewContainer"] {
     padding-top: 0 !important;
+    top: 0 !important;
+}
+[data-testid="stAppViewContainer"] > .main {
+    padding-top: 0 !important;
+}
+[data-testid="stAppViewContainer"] section.main {
+    padding-top: 0 !important;
+}
+
+/* Inner block container */
+.block-container,
+[data-testid="stMainBlockContainer"],
+[data-testid="block-container"] {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 480px !important;
+    background: var(--cream);
+}
+
+/* First vertical block — kill any top margin */
+[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
 }
 [data-testid="stVerticalBlock"] > [data-testid="element-container"]:first-child {
     margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+[data-testid="stMain"] {
+    padding-top: 0 !important;
 }
 
 .page { padding: 0 14px 80px; }
 
-/* ── SIDEBAR (hamburger drawer) — 3/5 width, slides from left ─── */
+/* ═══════ SIDEBAR — slides from left, 3/5 width, with VISIBLE hamburger ═══════ */
 [data-testid="stSidebar"] {
     width: 60vw !important;
     min-width: 60vw !important;
@@ -90,7 +126,7 @@ def inject_css():
     border-right: 1px solid var(--line);
 }
 [data-testid="stSidebar"] > div {
-    padding-top: 60px !important;
+    padding-top: 50px !important;
     padding-left: 20px !important;
     padding-right: 20px !important;
 }
@@ -123,9 +159,6 @@ def inject_css():
     background: var(--line);
     margin: 16px 0;
 }
-.sidebar-logout {
-    margin-top: 20px;
-}
 .sidebar-logout .stButton button {
     background: #FDECEA !important;
     color: #7A1F0E !important;
@@ -135,21 +168,33 @@ def inject_css():
     justify-content: center !important;
 }
 
-/* Make Streamlit's sidebar toggle look like a hamburger and position on right */
-[data-testid="stSidebarCollapsedControl"] {
-    top: 28px !important;
+/* ═══════ HAMBURGER TOGGLE — make it VISIBLE & put on top-right ═══════ */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"],
+button[kind="header"] {
+    position: fixed !important;
+    top: 12px !important;
+    right: 12px !important;
     left: auto !important;
-    right: 16px !important;
-    background: rgba(255,255,255,0.18) !important;
-    border-radius: 8px !important;
-    padding: 6px 8px !important;
-    z-index: 999 !important;
+    z-index: 9999 !important;
+    background: rgba(255,255,255,0.95) !important;
+    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18) !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    border: 1px solid var(--line) !important;
 }
-[data-testid="stSidebarCollapsedControl"] svg {
-    color: #fff !important;
-    fill: #fff !important;
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="collapsedControl"] svg,
+button[kind="header"] svg {
+    color: #0F3D3E !important;
+    fill: #0F3D3E !important;
     width: 22px !important;
     height: 22px !important;
+    visibility: visible !important;
+    display: block !important;
 }
 
 /* Brand bar */
@@ -525,16 +570,13 @@ def esc_card(rm_name, status, kind, visible_to, month_trail):
 
 
 def month_indicator(month):
-    """Small pill showing which month is currently being viewed (visible on main view)."""
-    st.html(f"""<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
-      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;
-                   text-transform:uppercase;letter-spacing:.6px;">Viewing</span>
-      <span style="font-family:'Sora',sans-serif;font-size:13px;font-weight:700;
-                   color:#0F3D3E;background:#E6F4F2;padding:3px 10px;
+    """Compact pill showing currently-viewed month, visible on the main view."""
+    st.html(f"""<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;">
+      <span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;
+                   color:#0F3D3E;background:#E6F4F2;padding:4px 12px;
                    border-radius:14px;">📅 {month}</span>
-      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;">
-        Tap ☰ to change
-      </span>
+      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;
+                   margin-left:4px;">— change in menu ☰</span>
     </div>""")
 
 
