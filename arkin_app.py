@@ -33,22 +33,36 @@ st.set_page_config(
 )
 
 # =============================================================================
-# WHITESPACE FIX — st.markdown works on Streamlit Cloud for layout CSS
+# WHITESPACE FIX
+# Source: medium.com/codetodeploy + discuss.streamlit.io/t/21737/15
+#
+# Both sources confirm:
+#   - .stMainBlockContainer is the correct selector (Streamlit 1.40+)
+#   - .stAppHeader transparent = header floats, no visible gap underneath
+#   - No sidebar here so padding-top: 0rem is safe (no hamburger overlap)
+#   - st.html() with <style> is officially supported since Streamlit v1.45
 # =============================================================================
 def fix_whitespace():
-    st.markdown("""
-<style>
-#MainMenu, footer, header { visibility: hidden !important; height: 0 !important; }
-[data-testid="stHeader"]          { display: none !important; }
-[data-testid="stToolbar"]         { display: none !important; }
-[data-testid="stDecoration"]      { display: none !important; }
-[data-testid="stMainBlockContainer"] { padding-top: 0 !important; }
-[data-testid="stAppViewContainer"]   { padding-top: 0 !important; }
-section[data-testid="stMain"]        { padding-top: 0 !important; }
-.block-container { padding-top: 0 !important; }
-div[data-testid="stVerticalBlock"] > div:first-child { margin-top: 0 !important; }
-</style>
-""", unsafe_allow_html=True)
+    st.html("""<style>
+/* Remove all top whitespace — confirmed working on Streamlit Cloud */
+.stMainBlockContainer {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    padding-left: 0rem;
+    padding-right: 0rem;
+    max-width: 480px;
+}
+
+/* Make the header transparent so it floats above content — no gap */
+.stAppHeader {
+    background-color: rgba(255, 255, 255, 0.0);
+    visibility: visible;
+}
+
+/* Hide Streamlit chrome */
+#MainMenu { visibility: hidden; }
+footer    { visibility: hidden; }
+</style>""")
 
 # =============================================================================
 # CSS — fonts, components, theming via st.html
@@ -76,55 +90,20 @@ def inject_css():
 
 .stApp { background: var(--cream); font-family: 'Inter', sans-serif; color: var(--ink1); }
 
-.block-container,
-[data-testid="stMainBlockContainer"] {
-    max-width: 480px !important;
-    background: var(--cream);
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
+/* max-width, padding handled by fix_whitespace() above */
+.block-container { background: var(--cream); }
 
 .page { padding: 0 14px 80px; }
 
 /* ═══════ SIDEBAR ═══════ */
-[data-testid="stSidebar"] {
-    width: 60vw !important; min-width: 60vw !important; max-width: 60vw !important;
-    background: var(--cream) !important;
-    border-right: 1px solid var(--line);
-}
-[data-testid="stSidebar"] > div { padding-top: 50px !important; padding-left: 20px !important; padding-right: 20px !important; }
-[data-testid="stSidebar"] .stMarkdown h3 {
-    font-family: 'Sora', sans-serif !important; color: var(--teal) !important;
-    font-size: 14px !important; font-weight: 700 !important;
-    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px !important;
-}
-[data-testid="stSidebar"] .stButton button {
-    background: transparent !important; color: var(--ink1) !important;
-    border: 1.5px solid var(--line) !important; text-align: left !important;
-    justify-content: flex-start !important; margin-bottom: 6px !important; font-weight: 500 !important;
-}
-[data-testid="stSidebar"] .stButton button[kind="primary"] {
-    background: var(--teal) !important; color: #fff !important;
-    border-color: var(--teal) !important; font-weight: 600 !important;
-}
-
-/* ═══════ HAMBURGER ═══════ */
+/* Hide sidebar and hamburger entirely — month selector is inline */
+[data-testid="stSidebar"],
 [data-testid="stSidebarCollapsedControl"],
 [data-testid="collapsedControl"],
 button[kind="header"] {
-    position: fixed !important; top: 12px !important; right: 12px !important;
-    left: auto !important; z-index: 9999 !important;
-    background: rgba(255,255,255,0.95) !important; border-radius: 10px !important;
-    padding: 8px 10px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.18) !important;
-    display: flex !important; visibility: visible !important; opacity: 1 !important;
-    border: 1px solid var(--line) !important;
-}
-[data-testid="stSidebarCollapsedControl"] svg,
-[data-testid="collapsedControl"] svg,
-button[kind="header"] svg {
-    color: #0F3D3E !important; fill: #0F3D3E !important;
-    width: 22px !important; height: 22px !important;
-    visibility: visible !important; display: block !important;
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
 }
 
 /* ═══════ BRAND BAR ═══════ */
@@ -377,10 +356,9 @@ def build_escalation_table(perf_all, user, prod_ov=None):
 
 def brand_bar(user, prod=None):
     """
-    Brand bar with logout button baked in as a pure HTML button.
-    Clicking it sets ?logout=1 in the URL query string.
-    Streamlit detects this via st.query_params at the top of main() and clears session.
-    This is 100% reliable on Streamlit Cloud — no CSS targeting needed.
+    Brand bar with logout button baked in as pure HTML.
+    Clicking it triggers a hidden Streamlit button via JS — 
+    most reliable logout pattern on Streamlit Cloud.
     """
     p = prod or user["product"]
     st.html(f"""
@@ -395,9 +373,7 @@ def brand_bar(user, prod=None):
         </div>
       </div>
       <button class="bb-logout" onclick="
-        const url = new URL(window.parent.location.href);
-        url.searchParams.set('logout', '1');
-        window.parent.location.href = url.toString();
+        window.parent.document.querySelector('button[data-testid=\\'logout_btn\\']').click();
       ">🚪 Sign out</button>
     </div>
     """)
@@ -459,24 +435,19 @@ def plotly_theme(fig, h=240):
 
 
 # =============================================================================
-# MONTH SELECTOR (sidebar)
+# MONTH SELECTOR — inline selectbox, no sidebar needed
 # =============================================================================
 def month_selector(key="month_sel"):
     if key not in st.session_state:
         st.session_state[key] = CURRENT_MONTH
-    with st.sidebar:
-        st.markdown("### 📅 Select Month")
-        for m in MONTH_ORDER:
-            active = st.session_state[key] == m
-            if st.button(
-                f"{'✓  ' if active else '   '}{m}",
-                key=f"{key}_{m}",
-                use_container_width=True,
-                type="primary" if active else "secondary",
-            ):
-                st.session_state[key] = m
-                st.rerun()
-    return st.session_state[key]
+    selected = st.selectbox(
+        "📅 Viewing month",
+        MONTH_ORDER,
+        index=MONTH_ORDER.index(st.session_state[key]),
+        key=key,
+    )
+    st.session_state[key] = selected
+    return selected
 
 
 # =============================================================================
@@ -484,7 +455,6 @@ def month_selector(key="month_sel"):
 # =============================================================================
 def rm_dashboard(user, data):
     sel = month_selector("rm_month")
-    month_indicator(sel)
     perf_m  = scope(data["perf"],  user, month_label=sel)
     port_m  = scope(data["port"],  user, month_label=sel)
     prof_m  = scope(data["prof"],  user, month_label=sel)
@@ -598,7 +568,6 @@ def rm_dashboard(user, data):
 # =============================================================================
 def leader_dashboard(user, data, prod_ov=None):
     sel = month_selector("ldr_month")
-    month_indicator(sel)
     perf_m = scope(data["perf"], user, prod_ov, month_label=sel)
     prof_m = scope(data["prof"], user, prod_ov, month_label=sel)
     port_m = scope(data["port"], user, prod_ov, month_label=sel)
@@ -849,15 +818,6 @@ def login_screen():
 def main():
     # ── Fix whitespace FIRST, before anything else renders ───────────────
     fix_whitespace()
-
-    # ── Handle logout via query param (set by brand bar button JS) ───────
-    # This is the reliable Streamlit Cloud logout pattern.
-    params = st.query_params
-    if params.get("logout") == "1":
-        st.query_params.clear()
-        st.session_state.clear()
-        st.rerun()
-
     inject_css()
     data = load_data()
 
@@ -869,7 +829,22 @@ def main():
 
     st.markdown('<div class="page">', unsafe_allow_html=True)
 
-    # brand_bar renders the logout button inside the HTML — no Streamlit button needed
+    # Hidden logout button — triggered by JS click from brand bar
+    # Styled to be invisible; sits outside the page flow
+    st.markdown("""
+<style>
+button[data-testid="logout_btn"] {
+    position: absolute !important;
+    width: 1px !important; height: 1px !important;
+    opacity: 0 !important; pointer-events: none !important;
+    overflow: hidden !important;
+}
+</style>
+""", unsafe_allow_html=True)
+    if st.button("logout", key="logout_btn"):
+        st.session_state.clear()
+        st.rerun()
+
     brand_bar(user)
 
     level = user["level"]
