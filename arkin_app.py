@@ -39,7 +39,6 @@ st.set_page_config(
 
 # =============================================================================
 # CSS — injected via st.html() which is safe in Streamlit 1.40+ / Python 3.14
-# st.markdown() with <style> is now blocked by Streamlit Cloud security policy.
 # =============================================================================
 def inject_css():
     st.html("""
@@ -64,7 +63,6 @@ def inject_css():
 }
 
 /* ═══════ STRIP ALL TOP WHITESPACE ═══════ */
-/* Streamlit's header bar */
 #MainMenu, footer { visibility: hidden; height: 0 !important; }
 header[data-testid="stHeader"],
 [data-testid="stHeader"] {
@@ -75,7 +73,6 @@ header[data-testid="stHeader"],
 [data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
 .stApp > header { display: none !important; height: 0 !important; }
 
-/* Main app container padding */
 .stApp {
     background: var(--cream);
     font-family: 'Inter', sans-serif;
@@ -92,8 +89,9 @@ header[data-testid="stHeader"],
     padding-top: 0 !important;
 }
 
-/* Inner block container */
+/* Inner block container — covers old + new Streamlit versions */
 .block-container,
+.main .block-container,
 [data-testid="stMainBlockContainer"],
 [data-testid="block-container"] {
     padding-top: 0 !important;
@@ -103,7 +101,6 @@ header[data-testid="stHeader"],
     background: var(--cream);
 }
 
-/* First vertical block — kill any top margin */
 [data-testid="stVerticalBlock"] {
     gap: 0 !important;
 }
@@ -114,10 +111,17 @@ header[data-testid="stHeader"],
 [data-testid="stMain"] {
     padding-top: 0 !important;
 }
+/* Newer Streamlit 1.40+ specific */
+[data-testid="stMainBlockContainer"] {
+    padding-top: 0 !important;
+}
+section[data-testid="stMain"] > div:first-child {
+    padding-top: 0 !important;
+}
 
 .page { padding: 0 14px 80px; }
 
-/* ═══════ SIDEBAR — slides from left, 3/5 width, with VISIBLE hamburger ═══════ */
+/* ═══════ SIDEBAR ═══════ */
 [data-testid="stSidebar"] {
     width: 60vw !important;
     min-width: 60vw !important;
@@ -154,21 +158,26 @@ header[data-testid="stHeader"],
     border-color: var(--teal) !important;
     font-weight: 600 !important;
 }
+
+/* ── LOGOUT BUTTON — target by key attribute rendered by Streamlit ── */
+[data-testid="stSidebar"] [data-testid="stButton"]:last-of-type button,
+[data-testid="stSidebar"] .stButton:last-child button {
+    background: #FDECEA !important;
+    color: #7A1F0E !important;
+    border: 1.5px solid #f5c6c0 !important;
+    font-weight: 600 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin-top: 4px !important;
+}
+
 .sidebar-divider {
     height: 1px;
     background: var(--line);
     margin: 16px 0;
 }
-.sidebar-logout .stButton button {
-    background: #FDECEA !important;
-    color: #7A1F0E !important;
-    border-color: #FDECEA !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-    justify-content: center !important;
-}
 
-/* ═══════ HAMBURGER TOGGLE — make it VISIBLE & put on top-right ═══════ */
+/* ═══════ HAMBURGER TOGGLE ═══════ */
 [data-testid="stSidebarCollapsedControl"],
 [data-testid="collapsedControl"],
 button[kind="header"] {
@@ -301,7 +310,7 @@ button[kind="header"] svg {
 }
 .stRadio label { font-family: 'Inter', sans-serif; font-size: 13px; }
 
-/* ── LOGIN — compact, single screen ────────────────────────── */
+/* ── LOGIN ────────────────────────── */
 .login-outer {
     background: var(--cream);
     position: relative; overflow: visible;
@@ -341,10 +350,6 @@ button[kind="header"] svg {
 .login-sub {
     font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink3);
     margin-top: 6px; line-height: 1.5; margin-bottom: 0;
-}
-/* Collapse Streamlit's auto gap between st.html() and st.form() on login */
-.login-form-pull {
-    margin-top: -8px;
 }
 [data-testid="stForm"] {
     background: #fff; border-radius: 16px;
@@ -516,7 +521,7 @@ def build_escalation_table(perf_all, user, prod_ov=None):
 
 
 # =============================================================================
-# UI HELPERS  — use st.html() for all custom HTML elements
+# UI HELPERS
 # =============================================================================
 def brand_bar(user, prod=None):
     p = prod or user["product"]
@@ -570,7 +575,6 @@ def esc_card(rm_name, status, kind, visible_to, month_trail):
 
 
 def month_indicator(month):
-    """Compact pill showing currently-viewed month, visible on the main view."""
     st.html(f"""<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;">
       <span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;
                    color:#0F3D3E;background:#E6F4F2;padding:4px 12px;
@@ -610,8 +614,6 @@ def plotly_theme(fig, h=240):
 # MONTH SELECTOR
 # =============================================================================
 def month_selector(key="month_sel"):
-    """Renders the month picker INSIDE the sidebar (hamburger drawer).
-    Returns the currently selected month from session state."""
     if key not in st.session_state:
         st.session_state[key] = CURRENT_MONTH
     with st.sidebar:
@@ -647,7 +649,6 @@ def rm_dashboard(user, data):
 
     t1, t2, t3 = st.tabs(["🎯 Focus", "📊 Performance", "💼 Portfolio"])
 
-    # ── FOCUS ────────────────────────────────────────────────────────────
     with t1:
         sec("AI Nudges", "🤖")
         if not notif_m.empty:
@@ -672,7 +673,6 @@ def rm_dashboard(user, data):
         if row["Actual Conversion %"] < row["Target Conversion %"]:
             action_card(f"🎯 Conversion {row['Actual Conversion %']:.1f}% below target {row['Target Conversion %']:.1f}% — reduce TAT.")
 
-    # ── PERFORMANCE ───────────────────────────────────────────────────────
     with t2:
         sec("Funnel — Login → Sanction → Disb", "📊")
         c = st.columns(3)
@@ -726,7 +726,6 @@ def rm_dashboard(user, data):
         fee = row["Actual Disb Amount (Rs Cr)"] * (row["Actual PF %"] + row["Actual Insurance %"]) / 100
         kpi("Fee Income", f"₹{fee:.3f} Cr", "PF + Insurance this month")
 
-    # ── PORTFOLIO ─────────────────────────────────────────────────────────
     with t3:
         if not prof_m.empty:
             prow = prof_m.iloc[0]
@@ -777,7 +776,6 @@ def leader_dashboard(user, data, prod_ov=None):
 
     t1, t2, t3, t4 = st.tabs(["🎯 Focus", "📊 Performance", "💼 Portfolio", "💵 Profitability"])
 
-    # ── FOCUS ────────────────────────────────────────────────────────────
     with t1:
         sec("Escalation Tracker", "🚨")
         st.caption("RMs with consecutive zero disbursements — live escalation ladder")
@@ -832,7 +830,6 @@ def leader_dashboard(user, data, prod_ov=None):
                           ["rbm@arkafincap.com", "zh@arkafincap.com"])
             nudge_email_btn(f"Open Email — Nudge {rm_pick}", link)
 
-    # ── PERFORMANCE ───────────────────────────────────────────────────────
     with t2:
         sec("Team Snapshot", "👥")
         total_disb = int(perf_m["Actual Disb #"].sum())
@@ -889,7 +886,6 @@ def leader_dashboard(user, data, prod_ov=None):
             st.write("**Bottom 5**")
             st.dataframe(abm_p.nsmallest(5, "Ach %"), use_container_width=True, hide_index=True)
 
-    # ── PORTFOLIO ─────────────────────────────────────────────────────────
     with t3:
         if not prof_m.empty:
             sec("Portfolio Health — Aggregate", "💼")
@@ -912,7 +908,6 @@ def leader_dashboard(user, data, prod_ov=None):
                          color_discrete_sequence=PALETTE)
             st.plotly_chart(plotly_theme(fig, 270), use_container_width=True)
 
-    # ── PROFITABILITY ─────────────────────────────────────────────────────
     with t4:
         if not prof_m.empty:
             sec("Profitability KPIs", "💵")
@@ -999,7 +994,7 @@ def admin_dashboard(user, data):
 
 
 # =============================================================================
-# LOGIN — compact single screen
+# LOGIN
 # =============================================================================
 def login_screen():
     st.html("""
@@ -1069,7 +1064,7 @@ def main():
 
     user = st.session_state["user"]
 
-    # ── SIDEBAR (hamburger drawer) — user info + sign-out at bottom ──────
+    # ── SIDEBAR: user info block ─────────────────────────────────────────
     with st.sidebar:
         st.markdown(f"### 👤 {user['name']}")
         st.caption(f"{user['role']}")
@@ -1077,7 +1072,7 @@ def main():
         st.caption(f"Zone: {user.get('zone', '—')}")
         st.html('<div class="sidebar-divider"></div>')
 
-    # Month selector & dashboard content (month_selector adds to sidebar internally)
+    # ── Main content ─────────────────────────────────────────────────────
     st.markdown('<div class="page">', unsafe_allow_html=True)
 
     brand_bar(user)
@@ -1091,14 +1086,14 @@ def main():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── SIGN OUT — pinned at bottom of sidebar ──────────────────────────
+    # ── SIDEBAR: month selector runs inside dashboards (adds to sidebar)
+    # ── SIDEBAR: logout button — placed AFTER month selector buttons
+    #    so it appears below them. CSS targets it as the last sidebar button.
     with st.sidebar:
         st.html('<div class="sidebar-divider"></div>')
-        st.html('<div class="sidebar-logout">')
         if st.button("🚪 Sign out", use_container_width=True, key="sb_logout"):
             st.session_state.clear()
             st.rerun()
-        st.html('</div>')
 
 
 if __name__ == "__main__":
