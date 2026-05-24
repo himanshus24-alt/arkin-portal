@@ -1,14 +1,9 @@
 """
 Arka KinetiQ — Intelligence in Motion
 ======================================
-4-month multi-period data (Jan-26 to Apr-26).
-Real escalation logic across months.
-
-KEY FIX: Uses st.html() for CSS injection (Streamlit 1.40+ / Python 3.14 compatible).
-st.markdown() with <style> tags is blocked by Streamlit Cloud security policy.
-st.html() is the approved method for custom HTML/CSS.
-
-Run: streamlit run arkin_app.py --server.port=8501 --server.address=0.0.0.0
+Streamlit Cloud + GitHub deployment.
+Logout button embedded in brand bar HTML via query_params.
+Whitespace fix via st.markdown unsafe_allow_html (works on Streamlit Cloud).
 """
 
 import streamlit as st
@@ -38,7 +33,25 @@ st.set_page_config(
 )
 
 # =============================================================================
-# CSS — injected via st.html() which is safe in Streamlit 1.40+ / Python 3.14
+# WHITESPACE FIX — st.markdown works on Streamlit Cloud for layout CSS
+# =============================================================================
+def fix_whitespace():
+    st.markdown("""
+<style>
+#MainMenu, footer, header { visibility: hidden !important; height: 0 !important; }
+[data-testid="stHeader"]          { display: none !important; }
+[data-testid="stToolbar"]         { display: none !important; }
+[data-testid="stDecoration"]      { display: none !important; }
+[data-testid="stMainBlockContainer"] { padding-top: 0 !important; }
+[data-testid="stAppViewContainer"]   { padding-top: 0 !important; }
+section[data-testid="stMain"]        { padding-top: 0 !important; }
+.block-container { padding-top: 0 !important; }
+div[data-testid="stVerticalBlock"] > div:first-child { margin-top: 0 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+# =============================================================================
+# CSS — fonts, components, theming via st.html
 # =============================================================================
 def inject_css():
     st.html("""
@@ -52,7 +65,6 @@ def inject_css():
     --copper:  #D4936B;
     --cop-bg:  #FDF4ED;
     --cream:   #F6F8F8;
-    --white:   #FFFFFF;
     --ink1:    #0F3D3E;
     --ink2:    #2D5A5B;
     --ink3:    #6B8788;
@@ -62,213 +74,130 @@ def inject_css():
     --sh-lg:   0 12px 32px rgba(15,61,62,0.12);
 }
 
-/* ═══════ STRIP ALL TOP WHITESPACE ═══════ */
-#MainMenu, footer { visibility: hidden; height: 0 !important; }
-header[data-testid="stHeader"],
-[data-testid="stHeader"] {
-    display: none !important;
-    height: 0 !important;
-    visibility: hidden !important;
-}
-[data-testid="stToolbar"], [data-testid="stDecoration"] { display: none !important; }
-.stApp > header { display: none !important; height: 0 !important; }
+.stApp { background: var(--cream); font-family: 'Inter', sans-serif; color: var(--ink1); }
 
-.stApp {
-    background: var(--cream);
-    font-family: 'Inter', sans-serif;
-    color: var(--ink1);
-}
-.stApp [data-testid="stAppViewContainer"] {
-    padding-top: 0 !important;
-    top: 0 !important;
-}
-[data-testid="stAppViewContainer"] > .main {
-    padding-top: 0 !important;
-}
-[data-testid="stAppViewContainer"] section.main {
-    padding-top: 0 !important;
-}
-
-/* Inner block container — covers old + new Streamlit versions */
 .block-container,
-.main .block-container,
-[data-testid="stMainBlockContainer"],
-[data-testid="block-container"] {
-    padding-top: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+[data-testid="stMainBlockContainer"] {
     max-width: 480px !important;
     background: var(--cream);
-}
-
-[data-testid="stVerticalBlock"] {
-    gap: 0 !important;
-}
-[data-testid="stVerticalBlock"] > [data-testid="element-container"]:first-child {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-[data-testid="stMain"] {
-    padding-top: 0 !important;
-}
-/* Newer Streamlit 1.40+ specific */
-[data-testid="stMainBlockContainer"] {
-    padding-top: 0 !important;
-}
-section[data-testid="stMain"] > div:first-child {
-    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 .page { padding: 0 14px 80px; }
 
 /* ═══════ SIDEBAR ═══════ */
 [data-testid="stSidebar"] {
-    width: 60vw !important;
-    min-width: 60vw !important;
-    max-width: 60vw !important;
+    width: 60vw !important; min-width: 60vw !important; max-width: 60vw !important;
     background: var(--cream) !important;
     border-right: 1px solid var(--line);
 }
-[data-testid="stSidebar"] > div {
-    padding-top: 50px !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-}
+[data-testid="stSidebar"] > div { padding-top: 50px !important; padding-left: 20px !important; padding-right: 20px !important; }
 [data-testid="stSidebar"] .stMarkdown h3 {
-    font-family: 'Sora', sans-serif !important;
-    color: var(--teal) !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 12px !important;
+    font-family: 'Sora', sans-serif !important; color: var(--teal) !important;
+    font-size: 14px !important; font-weight: 700 !important;
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px !important;
 }
 [data-testid="stSidebar"] .stButton button {
-    background: transparent !important;
-    color: var(--ink1) !important;
-    border: 1.5px solid var(--line) !important;
-    text-align: left !important;
-    justify-content: flex-start !important;
-    margin-bottom: 6px !important;
-    font-weight: 500 !important;
+    background: transparent !important; color: var(--ink1) !important;
+    border: 1.5px solid var(--line) !important; text-align: left !important;
+    justify-content: flex-start !important; margin-bottom: 6px !important; font-weight: 500 !important;
 }
 [data-testid="stSidebar"] .stButton button[kind="primary"] {
-    background: var(--teal) !important;
-    color: #fff !important;
-    border-color: var(--teal) !important;
-    font-weight: 600 !important;
+    background: var(--teal) !important; color: #fff !important;
+    border-color: var(--teal) !important; font-weight: 600 !important;
 }
 
-/* ── LOGOUT BUTTON — target by key attribute rendered by Streamlit ── */
-[data-testid="stSidebar"] [data-testid="stButton"]:last-of-type button,
-[data-testid="stSidebar"] .stButton:last-child button {
-    background: #FDECEA !important;
-    color: #7A1F0E !important;
-    border: 1.5px solid #f5c6c0 !important;
-    font-weight: 600 !important;
-    justify-content: center !important;
-    text-align: center !important;
-    margin-top: 4px !important;
-}
-
-.sidebar-divider {
-    height: 1px;
-    background: var(--line);
-    margin: 16px 0;
-}
-
-/* ═══════ HAMBURGER TOGGLE ═══════ */
+/* ═══════ HAMBURGER ═══════ */
 [data-testid="stSidebarCollapsedControl"],
 [data-testid="collapsedControl"],
 button[kind="header"] {
-    position: fixed !important;
-    top: 12px !important;
-    right: 12px !important;
-    left: auto !important;
-    z-index: 9999 !important;
-    background: rgba(255,255,255,0.95) !important;
-    border-radius: 10px !important;
-    padding: 8px 10px !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18) !important;
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+    position: fixed !important; top: 12px !important; right: 12px !important;
+    left: auto !important; z-index: 9999 !important;
+    background: rgba(255,255,255,0.95) !important; border-radius: 10px !important;
+    padding: 8px 10px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.18) !important;
+    display: flex !important; visibility: visible !important; opacity: 1 !important;
     border: 1px solid var(--line) !important;
 }
 [data-testid="stSidebarCollapsedControl"] svg,
 [data-testid="collapsedControl"] svg,
 button[kind="header"] svg {
-    color: #0F3D3E !important;
-    fill: #0F3D3E !important;
-    width: 22px !important;
-    height: 22px !important;
-    visibility: visible !important;
-    display: block !important;
+    color: #0F3D3E !important; fill: #0F3D3E !important;
+    width: 22px !important; height: 22px !important;
+    visibility: visible !important; display: block !important;
 }
 
-/* Brand bar */
+/* ═══════ BRAND BAR ═══════ */
 .brand-bar {
     background: var(--teal); color: #fff;
     padding: 14px 16px; border-radius: 14px;
     margin-bottom: 4px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: space-between;
 }
 .brand-bar::after {
     content: ""; position: absolute; top: -25px; right: -25px;
     width: 80px; height: 80px; background: var(--copper);
-    clip-path: polygon(50% 0%,100% 100%,0% 100%); opacity: .35;
+    clip-path: polygon(50% 0%,100% 100%,0% 100%); opacity: .35; pointer-events: none;
 }
-.brand-bar-inner { position: relative; z-index: 2; }
+.brand-bar-inner { position: relative; z-index: 2; flex: 1; }
 .bb-logo { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
 .bb-arka { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 2px; color: #fff; }
 .bb-kq   { font-family: 'Sora', sans-serif; font-weight: 500; font-size: 15px; font-style: italic; color: var(--copper); }
 .bb-meta { font-family: 'Inter', sans-serif; font-size: 11px; opacity: .85; line-height: 1.5; }
-.bb-chip { background: rgba(255,255,255,.15); color: #fff; padding: 2px 8px;
-           border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+.bb-chip { background: rgba(255,255,255,.15); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+
+/* Logout button inside brand bar HTML */
+.bb-logout {
+    position: relative; z-index: 10;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 10px;
+    transition: background 0.15s;
+}
+.bb-logout:hover {
+    background: rgba(200,85,61,0.7);
+    border-color: rgba(200,85,61,0.9);
+}
 
 /* KPI tiles */
 .kpi-card { background: #fff; border-radius: 12px; padding: 12px 13px;
             border: 1px solid var(--line); box-shadow: var(--sh-sm); margin-bottom: 8px; }
-.kpi-label { font-size: 10px; font-weight: 600; color: var(--ink3);
-             text-transform: uppercase; letter-spacing: .6px; }
-.kpi-value { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700;
-             color: var(--ink1); margin: 4px 0; line-height: 1.1; }
+.kpi-label { font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .6px; }
+.kpi-value { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink1); margin: 4px 0; line-height: 1.1; }
 .kpi-sub   { font-size: 11px; color: var(--ink3); font-weight: 500; }
 .kpi-up    { color: var(--teal2); font-size: 12px; }
 .kpi-down  { color: #C8553D; font-size: 12px; }
 
 /* Info cards */
-.nudge-card    { background: var(--cop-bg); border-left: 3px solid var(--copper);
-                 padding: 12px 14px; border-radius: 8px; margin-bottom: 8px;
-                 font-size: 13px; line-height: 1.5; color: #6B3F1F; }
-.announce-card { background: var(--teal-bg); border-left: 3px solid var(--teal2);
-                 padding: 12px 14px; border-radius: 8px; margin-bottom: 8px;
-                 font-size: 13px; line-height: 1.5; color: var(--teal); }
-.action-card   { background: #FDECEA; border-left: 3px solid #C8553D;
-                 padding: 12px 14px; border-radius: 8px; margin-bottom: 8px;
-                 font-size: 13px; line-height: 1.5; color: #7A1F0E; }
-.esc-card      { background: #fff; border-radius: 10px; border: 1px solid var(--line);
-                 padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh-sm); }
+.nudge-card    { background: var(--cop-bg); border-left: 3px solid var(--copper); padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #6B3F1F; }
+.announce-card { background: var(--teal-bg); border-left: 3px solid var(--teal2); padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: var(--teal); }
+.action-card   { background: #FDECEA; border-left: 3px solid #C8553D; padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #7A1F0E; }
+.esc-card      { background: #fff; border-radius: 10px; border: 1px solid var(--line); padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh-sm); }
 
 /* Status chips */
-.chip-amber { background: var(--cop-bg); color: #6B3F1F;
-              padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.chip-red   { background: #FDECEA; color: #7A1F0E;
-              padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.chip-green { background: var(--teal-bg); color: var(--teal);
-              padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.chip-amber { background: var(--cop-bg); color: #6B3F1F; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.chip-red   { background: #FDECEA; color: #7A1F0E; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.chip-green { background: var(--teal-bg); color: var(--teal); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
 
 /* Section heading */
-.sec { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700;
-       color: var(--ink1); margin: 14px 0 8px; letter-spacing: .2px; }
-.sec .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-            background: var(--copper); margin-right: 8px; vertical-align: middle; }
+.sec { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; color: var(--ink1); margin: 14px 0 8px; letter-spacing: .2px; }
+.sec .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--copper); margin-right: 8px; vertical-align: middle; }
 
-/* Buttons */
+/* Streamlit buttons */
 .stButton button {
     width: 100%; background: var(--teal) !important; color: #fff !important;
     border: none !important; border-radius: 10px !important; padding: 11px 16px !important;
-    font-family: 'Sora', sans-serif !important; font-weight: 600 !important;
-    font-size: 14px !important; letter-spacing: .3px;
+    font-family: 'Sora', sans-serif !important; font-weight: 600 !important; font-size: 14px !important;
 }
 .stButton button:hover { background: var(--teal2) !important; }
 
@@ -278,25 +207,17 @@ button[kind="header"] svg {
     font-family: 'Inter', sans-serif !important; font-size: 14px !important;
     padding: 10px 14px !important; background: #fff !important;
 }
-.stTextInput input:focus {
-    border-color: var(--copper) !important;
-    box-shadow: 0 0 0 3px rgba(212,147,107,.15) !important;
-}
+.stTextInput input:focus { border-color: var(--copper) !important; box-shadow: 0 0 0 3px rgba(212,147,107,.15) !important; }
 .stTextInput label, .stSelectbox label {
     font-family: 'Inter', sans-serif !important; font-size: 11px !important;
-    font-weight: 600 !important; color: var(--ink2) !important;
-    text-transform: uppercase; letter-spacing: .5px;
+    font-weight: 600 !important; color: var(--ink2) !important; text-transform: uppercase; letter-spacing: .5px;
 }
 
 /* Tabs */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 4px; background: #fff; border-radius: 10px;
-    padding: 4px; border: 1px solid var(--line);
-}
+.stTabs [data-baseweb="tab-list"] { gap: 4px; background: #fff; border-radius: 10px; padding: 4px; border: 1px solid var(--line); }
 .stTabs [data-baseweb="tab"] {
-    font-family: 'Sora', sans-serif !important; font-size: 12px !important;
-    font-weight: 600 !important; color: var(--ink3) !important;
-    padding: 8px 4px !important; border-radius: 8px !important;
+    font-family: 'Sora', sans-serif !important; font-size: 12px !important; font-weight: 600 !important;
+    color: var(--ink3) !important; padding: 8px 4px !important; border-radius: 8px !important;
     flex: 1; background: transparent !important; border: none !important;
 }
 .stTabs [aria-selected="true"] { background: var(--teal) !important; color: #fff !important; }
@@ -304,75 +225,29 @@ button[kind="header"] svg {
 .stTabs [data-baseweb="tab-highlight"] { display: none; }
 
 /* Radio */
-.stRadio > div {
-    gap: 4px !important; background: #fff; padding: 4px;
-    border-radius: 10px; border: 1px solid var(--line); display: flex !important;
-}
+.stRadio > div { gap: 4px !important; background: #fff; padding: 4px; border-radius: 10px; border: 1px solid var(--line); display: flex !important; }
 .stRadio label { font-family: 'Inter', sans-serif; font-size: 13px; }
 
-/* ── LOGIN ────────────────────────── */
-.login-outer {
-    background: var(--cream);
-    position: relative; overflow: visible;
-}
-.login-outer::before {
-    content: ""; position: fixed; top: 0; left: 0;
-    width: 88px; height: 88px; background: var(--teal);
-    clip-path: polygon(0 0,100% 0,0 100%); z-index: 1;
-}
-.login-outer::after {
-    content: ""; position: fixed; bottom: 0; right: 0;
-    width: 100px; height: 100px; background: var(--copper);
-    clip-path: polygon(100% 100%,100% 0,0 100%); z-index: 1; opacity: .88;
-}
-.login-inner {
-    position: relative; z-index: 5;
-    padding: 96px 22px 0px; max-width: 440px; margin: 0 auto;
-}
-.login-arka {
-    font-family: 'Sora', sans-serif; font-weight: 800;
-    font-size: 30px; color: var(--teal); letter-spacing: 2px;
-}
-.login-kq {
-    font-family: 'Sora', sans-serif; font-weight: 500;
-    font-size: 22px; color: var(--copper); font-style: italic;
-    letter-spacing: .5px; margin-left: 6px;
-}
-.login-tag {
-    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600;
-    color: var(--ink3); letter-spacing: 1.8px; text-transform: uppercase; margin-top: 6px;
-}
-.login-headline {
-    font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700;
-    line-height: 1.15; color: var(--teal); letter-spacing: -.3px; margin-top: 12px;
-}
+/* LOGIN */
+.login-outer { background: var(--cream); position: relative; overflow: visible; }
+.login-outer::before { content: ""; position: fixed; top: 0; left: 0; width: 88px; height: 88px; background: var(--teal); clip-path: polygon(0 0,100% 0,0 100%); z-index: 1; }
+.login-outer::after  { content: ""; position: fixed; bottom: 0; right: 0; width: 100px; height: 100px; background: var(--copper); clip-path: polygon(100% 100%,100% 0,0 100%); z-index: 1; opacity: .88; }
+.login-inner { position: relative; z-index: 5; padding: 96px 22px 0px; max-width: 440px; margin: 0 auto; }
+.login-arka { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 30px; color: var(--teal); letter-spacing: 2px; }
+.login-kq   { font-family: 'Sora', sans-serif; font-weight: 500; font-size: 22px; color: var(--copper); font-style: italic; letter-spacing: .5px; margin-left: 6px; }
+.login-tag  { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: var(--ink3); letter-spacing: 1.8px; text-transform: uppercase; margin-top: 6px; }
+.login-headline { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--teal); letter-spacing: -.3px; margin-top: 12px; }
 .login-accent { color: var(--copper); font-style: italic; }
-.login-sub {
-    font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink3);
-    margin-top: 6px; line-height: 1.5; margin-bottom: 0;
-}
-[data-testid="stForm"] {
-    background: #fff; border-radius: 16px;
-    padding: 18px 16px 16px;
-    box-shadow: var(--sh-lg);
-    border: 1px solid var(--line);
-    margin: 0 22px;
-}
-
-.login-footer {
-    margin-top: 12px; text-align: center;
-    font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink3);
-    padding-bottom: 80px;
-}
+.login-sub { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink3); margin-top: 6px; line-height: 1.5; }
+[data-testid="stForm"] { background: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--sh-lg); border: 1px solid var(--line); margin: 0 22px; }
+.login-footer { margin-top: 12px; text-align: center; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink3); padding-bottom: 80px; }
 .login-footer .pw  { font-weight: 600; color: var(--ink2); }
 .login-footer .grp { opacity: .7; display: block; margin-top: 2px; }
 
-/* Captions / DataFrames */
-.stCaption, [data-testid="stCaptionContainer"] {
-    font-family: 'Inter', sans-serif !important;
-    color: var(--ink3) !important; font-size: 12px !important;
-}
+/* Misc */
+.stCaption, [data-testid="stCaptionContainer"] { font-family: 'Inter', sans-serif !important; color: var(--ink3) !important; font-size: 12px !important; }
 .stDataFrame { font-size: 12px; }
+.sidebar-divider { height: 1px; background: var(--line); margin: 16px 0; }
 </style>
 """)
 
@@ -410,26 +285,19 @@ def build_users():
     u = {}
     for _, r in org[org["Level"] == "RM"].iterrows():
         u[f"rm.{r['ID']}"] = dict(name=r["Name"], role="Sales Manager", level="RM",
-            id=int(r["ID"]), product=r["Product"], zone=r["Zone"],
-            region=r["Region"], pw=DEMO_HASH)
+            id=int(r["ID"]), product=r["Product"], zone=r["Zone"], region=r["Region"], pw=DEMO_HASH)
     for _, r in org[org["Level"] == "ABM"].iterrows():
         u[f"abm.{r['ID']}"] = dict(name=r["Name"], role="Area Business Manager", level="ABM",
-            id=int(r["ID"]), product=r["Product"], zone=r["Zone"],
-            region=r["Region"], pw=DEMO_HASH)
+            id=int(r["ID"]), product=r["Product"], zone=r["Zone"], region=r["Region"], pw=DEMO_HASH)
     for _, r in org[org["Level"] == "RBM"].iterrows():
         u[f"rbm.{r['ID']}"] = dict(name=r["Name"], role="Regional Business Manager", level="RBM",
-            id=int(r["ID"]), product=r["Product"], zone=r["Zone"],
-            region=r["Region"], pw=DEMO_HASH)
+            id=int(r["ID"]), product=r["Product"], zone=r["Zone"], region=r["Region"], pw=DEMO_HASH)
     for _, r in org[org["Level"] == "ZH"].iterrows():
         u[f"zh.{r['ID']}"] = dict(name=r["Name"], role="Zonal Head", level="ZH",
-            id=int(r["ID"]), product=r["Product"], zone=r["Zone"],
-            region="All", pw=DEMO_HASH)
-    u["cxo"]     = dict(name="Chief Business Officer", role="CXO", level="CXO",
-                        id="CXO001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
-    u["central"] = dict(name="Central Analytics Lead", role="Central Team", level="CXO",
-                        id="CEN001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
-    u["admin"]   = dict(name="System Administrator", role="Admin", level="Admin",
-                        id="ADM001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+            id=int(r["ID"]), product=r["Product"], zone=r["Zone"], region="All", pw=DEMO_HASH)
+    u["cxo"]     = dict(name="Chief Business Officer",  role="CXO",         level="CXO",   id="CXO001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+    u["central"] = dict(name="Central Analytics Lead",  role="Central Team", level="CXO",   id="CEN001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+    u["admin"]   = dict(name="System Administrator",    role="Admin",        level="Admin", id="ADM001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
     return u
 
 
@@ -449,12 +317,10 @@ def scope(df, user, prod_ov=None, month_label=None):
         return df
     level = user["level"]
     prod  = prod_ov or user["product"]
-
     if month_label and "Month Label" in df.columns:
         df = df[df["Month Label"] == month_label]
     if prod in ("STLAP", "Wheels") and "Product" in df.columns:
         df = df[df["Product"] == prod]
-
     if level in ("CXO", "Admin"):  return df
     if level == "ZH"  and "ZH ID"  in df.columns: return df[df["ZH ID"]  == user["id"]]
     if level == "RBM" and "RBM ID" in df.columns: return df[df["RBM ID"] == user["id"]]
@@ -471,49 +337,34 @@ def scope(df, user, prod_ov=None, month_label=None):
 def build_escalation_table(perf_all, user, prod_ov=None):
     prod = prod_ov or user["product"]
     df = perf_all.copy()
-
     if prod in ("STLAP", "Wheels") and "Product" in df.columns:
         df = df[df["Product"] == prod]
-
     level = user["level"]
     if level == "ZH"  and "ZH ID"  in df.columns: df = df[df["ZH ID"]  == user["id"]]
     if level == "RBM" and "RBM ID" in df.columns: df = df[df["RBM ID"] == user["id"]]
     if level == "ABM" and "ABM ID" in df.columns: df = df[df["ABM ID"] == user["id"]]
-
     if df.empty or "Month Label" not in df.columns:
         return pd.DataFrame()
-
     pivot = df.pivot_table(
         index=["Emp ID", "EMP Name", "ABM Name", "RBM Name", "ZH NAME"],
-        columns="Month Label",
-        values="Actual Disb #",
-        aggfunc="sum"
+        columns="Month Label", values="Actual Disb #", aggfunc="sum"
     ).fillna(0)
-
     available = [m for m in MONTH_ORDER if m in pivot.columns]
     pivot = pivot[available]
-
     results = []
     for idx, row in pivot.iterrows():
         streak = 0
         for m in reversed(available):
-            if row[m] == 0:
-                streak += 1
-            else:
-                break
-        if streak == 0:
-            continue
+            if row[m] == 0: streak += 1
+            else: break
+        if streak == 0: continue
         if   streak == 1: status, kind, visible = "Month 1 — AMBER", "amber", "Visible to ABM"
         elif streak == 2: status, kind, visible = "Month 2 — AMBER", "amber", "Escalated to RBM"
         elif streak == 3: status, kind, visible = "Month 3 — RED",   "red",   "Escalated to ZH"
         else:             status, kind, visible = "Critical — RED",   "red",   "Visible to Business Head"
-
-        results.append({
-            "RM": idx[1], "ABM": idx[2],
-            "Streak": streak, "Status": status, "Kind": kind, "Visible To": visible,
-            **{m: int(row[m]) for m in available},
-        })
-
+        results.append({"RM": idx[1], "ABM": idx[2], "Streak": streak,
+            "Status": status, "Kind": kind, "Visible To": visible,
+            **{m: int(row[m]) for m in available}})
     esc = pd.DataFrame(results)
     if not esc.empty:
         esc = esc.sort_values("Streak", ascending=False)
@@ -523,7 +374,14 @@ def build_escalation_table(perf_all, user, prod_ov=None):
 # =============================================================================
 # UI HELPERS
 # =============================================================================
+
 def brand_bar(user, prod=None):
+    """
+    Brand bar with logout button baked in as a pure HTML button.
+    Clicking it sets ?logout=1 in the URL query string.
+    Streamlit detects this via st.query_params at the top of main() and clears session.
+    This is 100% reliable on Streamlit Cloud — no CSS targeting needed.
+    """
     p = prod or user["product"]
     st.html(f"""
     <div class="brand-bar">
@@ -531,11 +389,18 @@ def brand_bar(user, prod=None):
         <div class="bb-logo">
           <span class="bb-arka">ARKA</span><span class="bb-kq">KinetiQ</span>
         </div>
-        <div class="bb-meta">{user['name']} · {user['role']} · {user.get('zone','—')}
+        <div class="bb-meta">
+          {user['name']} · {user['role']} · {user.get('zone','—')}
           <span class="bb-chip">{p}</span>
         </div>
       </div>
-    </div>""")
+      <button class="bb-logout" onclick="
+        const url = new URL(window.parent.location.href);
+        url.searchParams.set('logout', '1');
+        window.parent.location.href = url.toString();
+      ">🚪 Sign out</button>
+    </div>
+    """)
 
 
 def kpi(label, value, sub="", trend=None):
@@ -553,18 +418,9 @@ def kpi(label, value, sub="", trend=None):
 def sec(title, emoji=""):
     st.html(f'<div class="sec"><span class="dot"></span>{emoji+" " if emoji else ""}{title}</div>')
 
-
-def nudge_card(text):
-    st.html(f'<div class="nudge-card">💡 {text}</div>')
-
-
-def announce_card(text):
-    st.html(f'<div class="announce-card">{text}</div>')
-
-
-def action_card(text):
-    st.html(f'<div class="action-card">{text}</div>')
-
+def nudge_card(text):    st.html(f'<div class="nudge-card">💡 {text}</div>')
+def announce_card(text): st.html(f'<div class="announce-card">{text}</div>')
+def action_card(text):   st.html(f'<div class="action-card">{text}</div>')
 
 def esc_card(rm_name, status, kind, visible_to, month_trail):
     chip_html = f'<span class="chip-{kind}">{status}</span>'
@@ -573,32 +429,24 @@ def esc_card(rm_name, status, kind, visible_to, month_trail):
       <span style="font-size:11px;color:#6B8788;">{visible_to} · {month_trail}</span>
     </div>""")
 
-
 def month_indicator(month):
     st.html(f"""<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;">
       <span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;
-                   color:#0F3D3E;background:#E6F4F2;padding:4px 12px;
-                   border-radius:14px;">📅 {month}</span>
-      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;
-                   margin-left:4px;">— change in menu ☰</span>
+                   color:#0F3D3E;background:#E6F4F2;padding:4px 12px;border-radius:14px;">📅 {month}</span>
+      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;margin-left:4px;">— change in menu ☰</span>
     </div>""")
-
 
 def mailto(to, subj, body, cc=None):
     return f"mailto:{to}?cc={','.join(cc or [])}&subject={quote(subj)}&body={quote(body)}"
 
-
 def nudge_email_btn(label, link):
     st.html(f"""<a href="{link}" style="text-decoration:none;">
       <button style="width:100%;background:#0F3D3E;color:white;border:none;padding:12px;
-        border-radius:10px;font-family:Sora,sans-serif;font-weight:600;
-        font-size:14px;cursor:pointer;letter-spacing:0.3px;">
+        border-radius:10px;font-family:Sora,sans-serif;font-weight:600;font-size:14px;cursor:pointer;">
         📧 {label}
       </button></a>""")
 
-
 PALETTE = ["#0F3D3E", "#1FA89A", "#D4936B", "#5BAFA8", "#E6B998", "#2D5A5B"]
-
 
 def plotly_theme(fig, h=240):
     fig.update_layout(height=h, margin=dict(l=10, r=10, t=10, b=10),
@@ -611,7 +459,7 @@ def plotly_theme(fig, h=240):
 
 
 # =============================================================================
-# MONTH SELECTOR
+# MONTH SELECTOR (sidebar)
 # =============================================================================
 def month_selector(key="month_sel"):
     if key not in st.session_state:
@@ -657,11 +505,9 @@ def rm_dashboard(user, data):
                 n = str(nrow.get(f"Notification {i}", ""))
                 if n.strip() and n != "nan":
                     nudge_card(n)
-
         sec("Announcements", "📢")
         announce_card("📌 Quarterly target review on 30th — submit branch numbers by EOD Friday.")
         announce_card("🎯 New TAT SLA: Login → Sanction within 5 working days from June.")
-
         sec("Today's Actionables", "✅")
         gap = max(0, int(row["Target Disb #"] - row["Actual Disb #"]))
         if row["Actual Disb #"] == 0:
@@ -679,41 +525,32 @@ def rm_dashboard(user, data):
         with c[0]: kpi("Logins",    f"{int(row['Actual Login #'])}",    f"Tgt {int(row['Target Login #'])}")
         with c[1]: kpi("Sanctions", f"{int(row['Actual Sanction #'])}", f"Tgt {int(row['Target Sanction #'])}")
         with c[2]: kpi("Disb",      f"{int(row['Actual Disb #'])}",     f"Tgt {int(row['Target Disb #'])}")
-
         fig = go.Figure(go.Funnel(
             y=["Logins", "Sanctions", "Disb"],
             x=[row["Actual Login #"], row["Actual Sanction #"], row["Actual Disb #"]],
             marker={"color": ["#1FA89A", "#0F3D3E", "#D4936B"]},
             textposition="inside", textinfo="value+percent initial"))
         st.plotly_chart(plotly_theme(fig), use_container_width=True)
-
         sec("Conversion & Mix", "🎯")
         c1, c2 = st.columns(2)
         with c1:
             conv_gap = row["Actual Conversion %"] - row["Target Conversion %"]
-            kpi("Conversion", f"{row['Actual Conversion %']:.1f}%",
-                f"Tgt {row['Target Conversion %']:.1f}%", trend=conv_gap)
+            kpi("Conversion", f"{row['Actual Conversion %']:.1f}%", f"Tgt {row['Target Conversion %']:.1f}%", trend=conv_gap)
             kpi("IRR Mix", f"{row['IRR Mix %']:.2f}%", "Portfolio yield")
         with c2:
             kpi("LTV", f"{row['LTV %']:.1f}%", "Loan to Value")
             kpi("Avg Ticket", f"₹{row['Avg Ticket Size (Rs L)']:.1f} L", "Per case")
-
         sec("Trend — All Months", "📈")
         perf_all_rm = scope(data["perf"], user)
         if not perf_all_rm.empty and "Month Label" in perf_all_rm.columns:
             trend = perf_all_rm.groupby("Month Label").agg(
-                Disb=("Actual Disb #", "sum"),
-                Target=("Target Disb #", "mean")
+                Disb=("Actual Disb #", "sum"), Target=("Target Disb #", "mean")
             ).reindex(MONTH_ORDER).reset_index()
             fig = go.Figure()
-            fig.add_bar(x=trend["Month Label"], y=trend["Disb"],
-                        name="Actual", marker_color="#1FA89A")
-            fig.add_scatter(x=trend["Month Label"], y=trend["Target"],
-                            name="Target", mode="lines+markers",
-                            line=dict(color="#D4936B", dash="dash", width=2),
-                            marker=dict(size=8))
+            fig.add_bar(x=trend["Month Label"], y=trend["Disb"], name="Actual", marker_color="#1FA89A")
+            fig.add_scatter(x=trend["Month Label"], y=trend["Target"], name="Target", mode="lines+markers",
+                            line=dict(color="#D4936B", dash="dash", width=2), marker=dict(size=8))
             st.plotly_chart(plotly_theme(fig), use_container_width=True)
-
         sec("Achievement & Productivity", "⚡")
         c1, c2 = st.columns(2)
         with c1:
@@ -722,7 +559,6 @@ def rm_dashboard(user, data):
         with c2:
             kpi("Cross-sell", f"{row['Cross Sell %']:.1f}%", "Insurance + bundle")
             kpi("Productivity", f"{row['Productivity (Disb/RM)']:.1f}", "Disb/RM/month")
-
         fee = row["Actual Disb Amount (Rs Cr)"] * (row["Actual PF %"] + row["Actual Insurance %"]) / 100
         kpi("Fee Income", f"₹{fee:.3f} Cr", "PF + Insurance this month")
 
@@ -741,14 +577,11 @@ def rm_dashboard(user, data):
                 kpi("Avg LTV",    f"{prow['Avg LTV %']:.1f}%",       "Portfolio")
                 kpi("NPA %",      f"{prow['NPA %']:.2f}%",            "Non-perf.")
                 kpi("Port. IRR",  f"{prow['Portfolio IRR %']:.2f}%", "Yield")
-
         if not port_m.empty:
             sec("Asset Mix", "🏷️")
             am = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
-            fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)",
-                         color_discrete_sequence=PALETTE)
+            fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)", color_discrete_sequence=PALETTE)
             st.plotly_chart(plotly_theme(fig, 260), use_container_width=True)
-
             sec("PAR Bucket", "📊")
             pm = port_m.groupby("PAR Bucket")["POS (Rs Cr)"].sum().reset_index()
             order = ["Current", "1-30 DPD", "31-60 DPD", "61-90 DPD", "90+ DPD"]
@@ -780,7 +613,6 @@ def leader_dashboard(user, data, prod_ov=None):
         sec("Escalation Tracker", "🚨")
         st.caption("RMs with consecutive zero disbursements — live escalation ladder")
         esc = build_escalation_table(data["perf"], user, prod_ov)
-
         if esc.empty:
             st.success("✅ No escalations active.")
         else:
@@ -789,43 +621,33 @@ def leader_dashboard(user, data, prod_ov=None):
             c1, c2 = st.columns(2)
             with c1: kpi("Amber Alerts", f"{n_amber}", "Action needed")
             with c2: kpi("Red Alerts",   f"{n_red}",   "Urgent")
-
             available_m = [m for m in MONTH_ORDER if m in esc.columns]
             for _, r in esc.head(15).iterrows():
                 trail = " | ".join(f"{m}: {r.get(m, '—')}" for m in available_m)
                 esc_card(r["RM"], r["Status"], r["Kind"], r["Visible To"], trail)
-
             if len(esc) > 15:
                 st.caption(f"+ {len(esc)-15} more RMs")
                 st.download_button("⬇ Download full escalation list",
                     esc.to_csv(index=False).encode(),
-                    file_name=f"escalations_{sel}.csv",
-                    mime="text/csv", use_container_width=True)
-
+                    file_name=f"escalations_{sel}.csv", mime="text/csv", use_container_width=True)
         sec("Focus of the Month", "🎯")
         st.caption("Low performers (< 60% target)")
         low = perf_m[perf_m["Actual Disb #"] < perf_m["Target Disb #"] * 0.6][
-            ["EMP Name", "Actual Disb #", "Target Disb #", "CM Achievement %"]
-        ].head(10)
+            ["EMP Name", "Actual Disb #", "Target Disb #", "CM Achievement %"]].head(10)
         if low.empty:
             st.success("✅ No low performers this month.")
         else:
-            st.dataframe(low.rename(columns={"EMP Name": "RM"}),
-                         use_container_width=True, hide_index=True)
-
+            st.dataframe(low.rename(columns={"EMP Name": "RM"}), use_container_width=True, hide_index=True)
         sec("Quick Nudge", "✉️")
         bottom = perf_m.sort_values("Actual Disb #").head(15)
         rm_pick = st.selectbox("Pick RM to nudge", bottom["EMP Name"].tolist(), key="nudge_sel")
         if rm_pick:
             rm_row   = bottom[bottom["EMP Name"] == rm_pick].iloc[0]
             rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkafincap.com"
-            body = (
-                f"Hi {rm_pick},\n\nYour {sel} performance: "
-                f"{int(rm_row['Actual Disb #'])} disbursements against target "
-                f"{int(rm_row['Target Disb #'])}.\n\n"
-                f"Please prioritise pipeline closure. Let's connect this week.\n\n"
-                f"Regards,\n{user['name']}"
-            )
+            body = (f"Hi {rm_pick},\n\nYour {sel} performance: "
+                    f"{int(rm_row['Actual Disb #'])} disbursements against target "
+                    f"{int(rm_row['Target Disb #'])}.\n\nPlease prioritise pipeline closure. "
+                    f"Let's connect this week.\n\nRegards,\n{user['name']}")
             link = mailto(rm_email, f"Performance Nudge {sel} — {rm_pick}", body,
                           ["rbm@arkafincap.com", "zh@arkafincap.com"])
             nudge_email_btn(f"Open Email — Nudge {rm_pick}", link)
@@ -842,20 +664,16 @@ def leader_dashboard(user, data, prod_ov=None):
         with c2:
             kpi("Disb Amt", f"₹{perf_m['Actual Disb Amount (Rs Cr)'].sum():.1f} Cr", "MTD")
             kpi("Avg Conv.",f"{perf_m['Actual Conversion %'].mean():.1f}%", "Login→Disb")
-
         sec("Leaderboard — Disbursements", "🏆")
         lb = perf_m.sort_values("Actual Disb #", ascending=False).head(10)[
             ["EMP Name", "Actual Disb #", "Target Disb #", "Actual Conversion %", "IRR Mix %"]
-        ].rename(columns={"EMP Name":"RM","Actual Disb #":"Disb",
-                           "Target Disb #":"Tgt","Actual Conversion %":"Conv%","IRR Mix %":"IRR%"})
+        ].rename(columns={"EMP Name":"RM","Actual Disb #":"Disb","Target Disb #":"Tgt","Actual Conversion %":"Conv%","IRR Mix %":"IRR%"})
         st.dataframe(lb, use_container_width=True, hide_index=True)
-
         sec("Leaderboard — IRR Mix", "💰")
         irr_lb = perf_m.sort_values("IRR Mix %", ascending=False).head(10)[
             ["EMP Name", "IRR Mix %", "Actual Disb #", "LTV %"]
         ].rename(columns={"EMP Name":"RM","IRR Mix %":"IRR%","Actual Disb #":"Disb"})
         st.dataframe(irr_lb, use_container_width=True, hide_index=True)
-
         sec("4-Month Peer Trend", "👥")
         perf_all = scope(data["perf"], user, prod_ov)
         if not perf_all.empty and "Month Label" in perf_all.columns:
@@ -866,20 +684,15 @@ def leader_dashboard(user, data, prod_ov=None):
             piv["Avg/Mo"] = (piv["Total"] / max(1, len(piv.columns)-1)).round(1)
             piv = piv.sort_values("Total", ascending=False).head(15).reset_index()
             st.dataframe(piv, use_container_width=True, hide_index=True)
-
         if user["level"] in ("RBM", "ZH", "CXO"):
             sec("Performance by Region", "🗺️")
-            reg = perf_m.groupby("Region").agg(
-                Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
+            reg = perf_m.groupby("Region").agg(Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
             reg["Ach %"] = (reg["Disb"] / reg["Target"] * 100).round(1)
             st.dataframe(reg, use_container_width=True, hide_index=True)
-            fig = px.bar(reg, x="Region", y=["Disb", "Target"], barmode="group",
-                         color_discrete_sequence=["#1FA89A","#D4936B"])
+            fig = px.bar(reg, x="Region", y=["Disb", "Target"], barmode="group", color_discrete_sequence=["#1FA89A","#D4936B"])
             st.plotly_chart(plotly_theme(fig, 260), use_container_width=True)
-
             sec("Top & Bottom ABMs", "🏆")
-            abm_p = perf_m.groupby("ABM Name").agg(
-                Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
+            abm_p = perf_m.groupby("ABM Name").agg(Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
             abm_p["Ach %"] = (abm_p["Disb"] / abm_p["Target"] * 100).round(1)
             st.write("**Top 5**")
             st.dataframe(abm_p.nlargest(5, "Ach %"), use_container_width=True, hide_index=True)
@@ -900,12 +713,10 @@ def leader_dashboard(user, data, prod_ov=None):
                 kpi("Avg LTV",    f"{prof_m['Avg LTV %'].mean():.1f}%",   "Avg")
                 kpi("NPA %",      f"{prof_m['NPA %'].mean():.2f}%",        "Avg")
                 kpi("Port. IRR",  f"{prof_m['Portfolio IRR %'].mean():.2f}%", "Avg")
-
         if not port_m.empty:
             sec("Asset Mix", "🏷️")
             am = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
-            fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)",
-                         color_discrete_sequence=PALETTE)
+            fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)", color_discrete_sequence=PALETTE)
             st.plotly_chart(plotly_theme(fig, 270), use_container_width=True)
 
     with t4:
@@ -918,7 +729,6 @@ def leader_dashboard(user, data, prod_ov=None):
             with c2:
                 kpi("Disb / RM",   f"₹{prof_m['Disb/RM (Rs Cr)'].mean():.4f} Cr", "Avg")
                 kpi("Gross Margin",f"{prof_m['Gross Margin %'].mean():.2f}%",       "Avg")
-
             sec("Path to 2% RoA", "🎯")
             avg_pat = prof_m["PAT % (Before HO Allocation)"].mean()
             avg_aum = prof_m["AUM/RM (Rs Cr)"].mean()
@@ -926,15 +736,11 @@ def leader_dashboard(user, data, prod_ov=None):
             avg_cst = prof_m["Branch Cost (Rs Cr)"].mean()
             if avg_pat < 2.0:
                 st.markdown(f"📈 **Current PAT% is {avg_pat:.2f}%, gap to 2% RoA is {2-avg_pat:.2f}pp.**")
-                if avg_aum < 12:
-                    st.markdown(f"• **AUM/RM lever**: ₹{avg_aum:.1f}Cr → push to ₹15Cr (+{(15-avg_aum)*avg_yld/100:.2f}pp)")
-                if avg_yld < 17:
-                    st.markdown(f"• **Yield lever**: {avg_yld:.2f}% → push higher-IRR deals (+0.5–1pp)")
-                if avg_cst > 1.5:
-                    st.markdown(f"• **Cost lever**: ₹{avg_cst:.2f}Cr → trim 10% (+{avg_cst*0.1:.2f}pp)")
+                if avg_aum < 12: st.markdown(f"• **AUM/RM lever**: ₹{avg_aum:.1f}Cr → push to ₹15Cr (+{(15-avg_aum)*avg_yld/100:.2f}pp)")
+                if avg_yld < 17: st.markdown(f"• **Yield lever**: {avg_yld:.2f}% → push higher-IRR deals (+0.5–1pp)")
+                if avg_cst > 1.5: st.markdown(f"• **Cost lever**: ₹{avg_cst:.2f}Cr → trim 10% (+{avg_cst*0.1:.2f}pp)")
             else:
                 st.success(f"✅ Already at {avg_pat:.2f}% — above 2% RoA target.")
-
             sec("Active Escalations Roll-up", "🚨")
             esc = build_escalation_table(data["perf"], user, prod_ov)
             if not esc.empty:
@@ -964,7 +770,6 @@ def cxo_dashboard(user, data):
 def admin_dashboard(user, data):
     sec("Admin Console", "⚙️")
     t1, t2, t3 = st.tabs(["📤 Upload Data", "🔔 Notifications", "👤 Users"])
-
     with t1:
         up = st.file_uploader("Choose Excel file", type=["xlsx"])
         if up:
@@ -975,7 +780,6 @@ def admin_dashboard(user, data):
             sz = DATA_FILE.stat().st_size / 1024
             mt = datetime.fromtimestamp(DATA_FILE.stat().st_mtime)
             st.info(f"📁 {DATA_FILE.name} · {sz:.1f} KB · {mt:%d-%b-%Y %H:%M}")
-
     with t2:
         notif = data["notif"]
         cols = ["Month Label", "RM Name", "Product", "Notification 1"]
@@ -983,7 +787,6 @@ def admin_dashboard(user, data):
         st.write(f"Total notifications: **{len(notif)}**")
         st.dataframe(notif[cols_exist].head(10), use_container_width=True, hide_index=True)
         st.button("🚀 Dispatch All (mock)", use_container_width=True)
-
     with t3:
         org = data["org"]
         st.dataframe(org.groupby(["Level", "Product"]).size().reset_index(name="Count"),
@@ -1000,25 +803,16 @@ def login_screen():
     st.html("""
     <div class="login-outer">
       <div class="login-inner">
-        <div>
-          <span class="login-arka">ARKA</span><span class="login-kq">KinetiQ</span>
-        </div>
+        <div><span class="login-arka">ARKA</span><span class="login-kq">KinetiQ</span></div>
         <div class="login-tag">INTELLIGENCE IN MOTION</div>
-        <div class="login-headline">
-          Get ahead,<br><span class="login-accent">every day.</span>
-        </div>
-        <div class="login-sub">
-          Your sales intelligence companion — numbers, nudges, and next steps
-          crafted for the way you actually work.
-        </div>
+        <div class="login-headline">Get ahead,<br><span class="login-accent">every day.</span></div>
+        <div class="login-sub">Your sales intelligence companion — numbers, nudges, and next steps crafted for the way you actually work.</div>
       </div>
     </div>
     """)
-
     with st.form("arkin_login"):
         st.text_input("Employee ID", placeholder="e.g. rm.3001", key="li_user")
-        st.text_input("Password", placeholder="Demo: arkin@2026",
-                      type="password", key="li_pass")
+        st.text_input("Password", placeholder="Demo: arkin@2026", type="password", key="li_pass")
         if st.form_submit_button("Sign in →", use_container_width=True):
             u = do_login(st.session_state.li_user, st.session_state.li_pass)
             if u:
@@ -1026,14 +820,12 @@ def login_screen():
                 st.rerun()
             else:
                 st.error("❌ Invalid Employee ID or password.")
-
     st.html("""
     <div class="login-footer">
       <span class="pw">Powered by Arka Fincap</span>
       <span class="grp">A Kirloskar Group company</span>
     </div>
     """)
-
     with st.expander("🧪 Demo credentials"):
         st.markdown(f"""
 **Password:** `{DEMO_PW}`
@@ -1055,6 +847,17 @@ def login_screen():
 # MAIN
 # =============================================================================
 def main():
+    # ── Fix whitespace FIRST, before anything else renders ───────────────
+    fix_whitespace()
+
+    # ── Handle logout via query param (set by brand bar button JS) ───────
+    # This is the reliable Streamlit Cloud logout pattern.
+    params = st.query_params
+    if params.get("logout") == "1":
+        st.query_params.clear()
+        st.session_state.clear()
+        st.rerun()
+
     inject_css()
     data = load_data()
 
@@ -1064,17 +867,9 @@ def main():
 
     user = st.session_state["user"]
 
-    # ── SIDEBAR: user info block ─────────────────────────────────────────
-    with st.sidebar:
-        st.markdown(f"### 👤 {user['name']}")
-        st.caption(f"{user['role']}")
-        st.caption(f"Product: {user['product']}")
-        st.caption(f"Zone: {user.get('zone', '—')}")
-        st.html('<div class="sidebar-divider"></div>')
-
-    # ── Main content ─────────────────────────────────────────────────────
     st.markdown('<div class="page">', unsafe_allow_html=True)
 
+    # brand_bar renders the logout button inside the HTML — no Streamlit button needed
     brand_bar(user)
 
     level = user["level"]
@@ -1085,15 +880,6 @@ def main():
     elif level == "Admin":        admin_dashboard(user, data)
 
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # ── SIDEBAR: month selector runs inside dashboards (adds to sidebar)
-    # ── SIDEBAR: logout button — placed AFTER month selector buttons
-    #    so it appears below them. CSS targets it as the last sidebar button.
-    with st.sidebar:
-        st.html('<div class="sidebar-divider"></div>')
-        if st.button("🚪 Sign out", use_container_width=True, key="sb_logout"):
-            st.session_state.clear()
-            st.rerun()
 
 
 if __name__ == "__main__":
