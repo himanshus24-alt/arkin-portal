@@ -177,8 +177,8 @@ def inject_css():
 
 /* ── LOGIN — compact, single screen ────────────────────────── */
 .login-outer {
-    min-height: 100vh; background: var(--cream);
-    position: relative; overflow: hidden;
+    background: var(--cream);
+    position: relative; overflow: visible;
 }
 .login-outer::before {
     content: ""; position: fixed; top: 0; left: 0;
@@ -192,7 +192,7 @@ def inject_css():
 }
 .login-inner {
     position: relative; z-index: 5;
-    padding: 104px 22px 24px; max-width: 440px; margin: 0 auto;
+    padding: 96px 22px 0px; max-width: 440px; margin: 0 auto;
 }
 .login-arka {
     font-family: 'Sora', sans-serif; font-weight: 800;
@@ -209,16 +209,29 @@ def inject_css():
 }
 .login-headline {
     font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700;
-    line-height: 1.15; color: var(--teal); letter-spacing: -.3px; margin-top: 14px;
+    line-height: 1.15; color: var(--teal); letter-spacing: -.3px; margin-top: 12px;
 }
 .login-accent { color: var(--copper); font-style: italic; }
 .login-sub {
     font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink3);
-    margin-top: 8px; line-height: 1.5;
+    margin-top: 6px; line-height: 1.5; margin-bottom: 0;
 }
+/* Collapse Streamlit's auto gap between st.html() and st.form() on login */
+.login-form-pull {
+    margin-top: -8px;
+}
+[data-testid="stForm"] {
+    background: #fff; border-radius: 16px;
+    padding: 18px 16px 16px;
+    box-shadow: var(--sh-lg);
+    border: 1px solid var(--line);
+    margin: 0 22px;
+}
+
 .login-footer {
-    margin-top: 14px; text-align: center;
+    margin-top: 12px; text-align: center;
     font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink3);
+    padding-bottom: 80px;
 }
 .login-footer .pw  { font-weight: 600; color: var(--ink2); }
 .login-footer .grp { opacity: .7; display: block; margin-top: 2px; }
