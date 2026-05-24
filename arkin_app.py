@@ -1,12 +1,14 @@
 """
-Arkin Sales Performance Portal — Mobile-First Streamlit App
-===========================================================
-Personas (with product scoping):
-  - Sales Manager (RM) ............... sees self only, one product only
-  - Team Leader (ABM) ................ sees own team, one product only
-  - Senior Leadership (RBM/ZH) ....... sees own scope, one product only
-  - CXO / Central Team ............... sees BOTH products across full org
-  - Admin ............................ uploads data, dispatches notifications
+Arka KinetiQ — Intelligence in Motion
+======================================
+Mobile-first sales intelligence portal for Arka Fincap.
+
+Brand palette:
+  Deep Teal     #0F3D3E   (primary)
+  Vibrant Teal  #1FA89A   (secondary)
+  Copper        #D4936B   (accent)
+  Cream         #F6F8F8   (background)
+  Pure White    #FFFFFF   (surfaces)
 
 Run:
   streamlit run arkin_app.py --server.port=8501 --server.address=0.0.0.0
@@ -29,71 +31,432 @@ DATA_DIR = Path(__file__).parent / "arkin"
 DATA_FILE = DATA_DIR / "arkin_dummy_data.xlsx"
 
 st.set_page_config(
-    page_title="Arkin Sales Portal",
-    page_icon="📊",
+    page_title="Arka KinetiQ",
+    page_icon="◬",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
-# ---- Mobile-first CSS ------------------------------------------------------
+# =============================================================================
+# GLOBAL CSS — Arka KinetiQ brand system
+# =============================================================================
 st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    .block-container {padding-top: 1rem; padding-bottom: 4rem; max-width: 480px;}
-
-    .brand-bar {
-        background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
-        color: white; padding: 14px 16px; border-radius: 12px;
-        margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    :root {
+        --teal-deep: #0F3D3E;
+        --teal-vibrant: #1FA89A;
+        --teal-soft: #E6F4F2;
+        --copper: #D4936B;
+        --copper-soft: #FDF4ED;
+        --cream: #F6F8F8;
+        --white: #FFFFFF;
+        --ink-900: #0F3D3E;
+        --ink-700: #2D5A5B;
+        --ink-500: #6B8788;
+        --ink-300: #B7C6C7;
+        --line: #E5EAEA;
+        --shadow-sm: 0 1px 3px rgba(15, 61, 62, 0.06);
+        --shadow-md: 0 4px 12px rgba(15, 61, 62, 0.08);
+        --shadow-lg: 0 12px 32px rgba(15, 61, 62, 0.12);
     }
-    .brand-bar h2 {margin: 0; font-size: 18px;}
-    .brand-bar p {margin: 2px 0 0 0; font-size: 11px; opacity: 0.85;}
 
+    /* ── Strip Streamlit defaults ────────────────────────────── */
+    #MainMenu, footer, header[data-testid="stHeader"] {visibility: hidden;}
+    .block-container {
+        padding: 0 !important;
+        max-width: 480px !important;
+        background: var(--cream);
+    }
+    .stApp {
+        background: var(--cream);
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: var(--ink-900);
+    }
+
+    /* ── Inner page padding ──────────────────────────────────── */
+    .page {
+        padding: 16px 16px 80px 16px;
+    }
+
+    /* ── Brand bar (dashboards) ──────────────────────────────── */
+    .brand-bar {
+        background: var(--teal-deep);
+        color: var(--white);
+        padding: 16px 18px 18px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+        position: relative;
+        overflow: hidden;
+    }
+    .brand-bar::before {
+        content: "";
+        position: absolute;
+        top: -30px; right: -30px;
+        width: 100px; height: 100px;
+        background: var(--teal-vibrant);
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        opacity: 0.35;
+        transform: rotate(15deg);
+    }
+    .brand-bar::after {
+        content: "";
+        position: absolute;
+        bottom: -20px; left: -20px;
+        width: 60px; height: 60px;
+        background: var(--copper);
+        clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+        opacity: 0.4;
+    }
+    .brand-bar .brand-row {
+        display: flex; align-items: baseline; gap: 6px;
+        position: relative; z-index: 2;
+    }
+    .brand-bar .b1 {
+        font-family: 'Sora', sans-serif;
+        font-weight: 800; font-size: 18px;
+        letter-spacing: 1.5px; color: var(--white);
+    }
+    .brand-bar .b2 {
+        font-family: 'Sora', sans-serif;
+        font-weight: 500; font-size: 16px;
+        color: var(--copper); font-style: italic;
+        letter-spacing: 0.2px;
+    }
+    .brand-bar .b-meta {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px; opacity: 0.78;
+        margin-top: 4px; position: relative; z-index: 2;
+    }
+
+    /* ── KPI tiles ───────────────────────────────────────────── */
     .kpi-card {
-        background: white; border-radius: 12px; padding: 12px;
-        border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        background: var(--white);
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-sm);
         margin-bottom: 8px;
     }
-    .kpi-label {font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.4px;}
-    .kpi-value {font-size: 22px; font-weight: 700; color: #1F2937; margin: 4px 0;}
-    .kpi-sub {font-size: 11px; color: #6B7280;}
-    .kpi-up {color: #059669;}
-    .kpi-down {color: #DC2626;}
+    .kpi-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 10px; font-weight: 600;
+        color: var(--ink-500);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+    .kpi-value {
+        font-family: 'Sora', sans-serif;
+        font-size: 24px; font-weight: 700;
+        color: var(--ink-900);
+        margin: 4px 0; line-height: 1.1;
+    }
+    .kpi-sub {font-size: 11px; color: var(--ink-500); font-weight: 500;}
+    .kpi-up {color: var(--teal-vibrant); font-size: 13px;}
+    .kpi-down {color: #C8553D; font-size: 13px;}
 
+    /* ── Nudge / Announce / Action cards ─────────────────────── */
     .nudge-card {
-        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-        border-left: 4px solid #F59E0B; padding: 12px 14px;
-        border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #78350F;
+        background: var(--copper-soft);
+        border-left: 3px solid var(--copper);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 13px; line-height: 1.5;
+        color: #6B3F1F;
     }
     .announce-card {
-        background: #DBEAFE; border-left: 4px solid #2563EB;
-        padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
-        font-size: 13px; color: #1E3A8A;
+        background: var(--teal-soft);
+        border-left: 3px solid var(--teal-vibrant);
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 13px; line-height: 1.5;
+        color: var(--teal-deep);
     }
     .action-card {
-        background: #FEE2E2; border-left: 4px solid #DC2626;
-        padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
-        font-size: 13px; color: #7F1D1D;
+        background: #FDECEA;
+        border-left: 3px solid #C8553D;
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 13px; line-height: 1.5;
+        color: #7A1F0E;
     }
 
-    .chip-amber {background:#FEF3C7; color:#92400E; padding:2px 8px;
-                 border-radius:10px; font-size:10px; font-weight:600;}
-    .chip-red   {background:#FEE2E2; color:#991B1B; padding:2px 8px;
-                 border-radius:10px; font-size:10px; font-weight:600;}
-    .chip-green {background:#D1FAE5; color:#065F46; padding:2px 8px;
-                 border-radius:10px; font-size:10px; font-weight:600;}
-    .chip-stlap {background:#DBEAFE; color:#1E40AF; padding:2px 8px;
-                 border-radius:10px; font-size:10px; font-weight:600;}
-    .chip-wheels{background:#F3E8FF; color:#6B21A8; padding:2px 8px;
-                 border-radius:10px; font-size:10px; font-weight:600;}
+    /* ── Status chips ────────────────────────────────────────── */
+    .chip {
+        display: inline-block; padding: 2px 8px;
+        border-radius: 10px; font-size: 10px;
+        font-weight: 600; letter-spacing: 0.3px;
+    }
+    .chip-amber {background: var(--copper-soft); color: #6B3F1F;}
+    .chip-red   {background: #FDECEA; color: #7A1F0E;}
+    .chip-green {background: var(--teal-soft); color: var(--teal-deep);}
+    .chip-stlap {background: var(--teal-soft); color: var(--teal-deep);}
+    .chip-wheels{background: var(--copper-soft); color: #6B3F1F;}
 
-    .section-title {font-size: 14px; font-weight: 700; color: #1F2937;
-                    margin: 16px 0 8px 0; display: flex; align-items: center;}
+    /* ── Section title ───────────────────────────────────────── */
+    .section-title {
+        font-family: 'Sora', sans-serif;
+        font-size: 14px; font-weight: 700;
+        color: var(--ink-900);
+        margin: 18px 0 10px 0;
+        letter-spacing: 0.2px;
+    }
+    .section-title .accent-dot {
+        display: inline-block; width: 6px; height: 6px;
+        border-radius: 50%; background: var(--copper);
+        margin-right: 8px; vertical-align: middle;
+    }
 
-    .stButton button {width: 100%; border-radius: 8px; font-size: 13px;
-                      padding: 8px 12px; font-weight: 600;}
+    /* ── Buttons (primary teal) ──────────────────────────────── */
+    .stButton button {
+        width: 100%;
+        background: var(--teal-deep) !important;
+        color: var(--white) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 16px !important;
+        font-family: 'Sora', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        letter-spacing: 0.3px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s;
+    }
+    .stButton button:hover {
+        background: var(--teal-vibrant) !important;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* ── Inputs ──────────────────────────────────────────────── */
+    .stTextInput input, .stSelectbox > div > div {
+        border-radius: 10px !important;
+        border: 1.5px solid var(--line) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 14px !important;
+        padding: 10px 14px !important;
+        background: var(--white) !important;
+    }
+    .stTextInput input:focus {
+        border-color: var(--copper) !important;
+        box-shadow: 0 0 0 3px rgba(212, 147, 107, 0.15) !important;
+    }
+    .stTextInput label, .stSelectbox label {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: var(--ink-700) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* ── DataFrames ──────────────────────────────────────────── */
     .stDataFrame {font-size: 12px;}
+
+    /* ── Radio buttons (CXO product toggle) ──────────────────── */
+    .stRadio > div {gap: 8px;}
+    .stRadio label {font-family: 'Inter', sans-serif; font-size: 13px;}
+
+    /* ── Tabs (admin) ────────────────────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {gap: 4px;}
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Inter', sans-serif;
+        font-size: 13px; font-weight: 600;
+    }
+
+    /* ── LOGIN PAGE ───────────────────────────────────────────── */
+    .login-page {
+        min-height: 100vh;
+        background: var(--cream);
+        position: relative;
+        padding: 28px 20px 24px;
+    }
+
+    /* Corner triangle decorations (echoes brand reference) */
+    .login-page::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0;
+        width: 140px; height: 140px;
+        background:
+          linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-deep) 50%, transparent 50%);
+        opacity: 0.95;
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+    .login-page::after {
+        content: "";
+        position: absolute;
+        bottom: 0; right: 0;
+        width: 160px; height: 160px;
+        background:
+          linear-gradient(315deg, var(--copper) 0%, var(--copper) 50%, transparent 50%);
+        opacity: 0.85;
+        clip-path: polygon(100% 100%, 100% 0, 0 100%);
+    }
+    /* Mid-scattered triangles */
+    .tri-1, .tri-2, .tri-3 {
+        position: absolute;
+        z-index: 1;
+    }
+    .tri-1 {
+        top: 90px; right: 30px;
+        width: 56px; height: 56px;
+        background: var(--teal-vibrant);
+        opacity: 0.85;
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+    .tri-2 {
+        top: 220px; left: 14px;
+        width: 38px; height: 38px;
+        background: var(--copper);
+        opacity: 0.7;
+        clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+    .tri-3 {
+        bottom: 200px; left: 40px;
+        width: 50px; height: 50px;
+        background: var(--teal-vibrant);
+        opacity: 0.45;
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    }
+
+    /* Logo block */
+    .logo-block {
+        position: relative; z-index: 5;
+        text-align: left;
+        padding-top: 60px;
+        padding-left: 4px;
+    }
+    .logo-mark {
+        display: inline-flex; gap: 3px;
+        margin-bottom: 14px;
+        align-items: flex-end;
+    }
+    .logo-mark .lt-1, .logo-mark .lt-2, .logo-mark .lt-3 {
+        width: 0; height: 0;
+    }
+    .logo-mark .lt-1 {
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 14px solid var(--teal-deep);
+    }
+    .logo-mark .lt-2 {
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 18px solid var(--teal-vibrant);
+    }
+    .logo-mark .lt-3 {
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 22px solid var(--copper);
+    }
+    .logo-wordmark {
+        font-family: 'Sora', sans-serif;
+        font-size: 28px; font-weight: 800;
+        color: var(--teal-deep);
+        letter-spacing: 1.5px;
+        line-height: 1;
+    }
+    .logo-wordmark .kinetiq {
+        color: var(--copper);
+        font-weight: 600;
+        font-style: italic;
+        margin-left: 2px;
+    }
+    .logo-tag {
+        font-family: 'Inter', sans-serif;
+        font-size: 11px; font-weight: 500;
+        color: var(--ink-500);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-top: 6px;
+    }
+
+    /* Hero headline (the bilingual tagline) */
+    .hero-headline {
+        position: relative; z-index: 5;
+        margin-top: 48px;
+        font-family: 'Sora', sans-serif;
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--teal-deep);
+        letter-spacing: -0.5px;
+    }
+    .hero-headline .accent {
+        color: var(--copper);
+        font-style: italic;
+    }
+    .hero-sub {
+        position: relative; z-index: 5;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: var(--ink-500);
+        margin-top: 12px;
+        line-height: 1.5;
+        max-width: 320px;
+    }
+
+    /* Login form card */
+    .login-card-wrapper {
+        position: relative; z-index: 5;
+        margin-top: 36px;
+    }
+
+    /* Form field rendering inside Streamlit */
+    .login-page .stForm {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+    .login-page [data-testid="stForm"] {
+        background: var(--white);
+        border-radius: 18px;
+        padding: 22px 18px 20px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--line);
+    }
+
+    .login-footer {
+        position: relative; z-index: 5;
+        margin-top: 28px;
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: var(--ink-500);
+        line-height: 1.6;
+    }
+    .login-footer .powered {
+        font-weight: 600;
+        color: var(--ink-700);
+    }
+    .login-footer .group {
+        opacity: 0.7;
+        margin-top: 2px;
+        display: block;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    [data-testid="stSidebar"] {
+        background: var(--white);
+        border-right: 1px solid var(--line);
+    }
+    [data-testid="stSidebar"] .stMarkdown {
+        font-family: 'Inter', sans-serif;
+        color: var(--ink-900);
+    }
+
+    /* ── Expander styling ────────────────────────────────────── */
+    .streamlit-expanderHeader, [data-testid="stExpander"] summary {
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        color: var(--teal-deep) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -217,17 +580,22 @@ def scope_data(df, user):
 # UI HELPERS
 # =============================================================================
 def brand_bar(user):
+    """Branded dashboard header with the same Arka KinetiQ identity."""
     prod_chip = ""
     if user["product"] == "STLAP":
-        prod_chip = '<span class="chip-stlap">STLAP</span>'
+        prod_chip = '<span class="chip chip-stlap" style="background:rgba(31,168,154,0.25);color:#fff;">STLAP</span>'
     elif user["product"] == "Wheels":
-        prod_chip = '<span class="chip-wheels">WHEELS</span>'
+        prod_chip = '<span class="chip chip-wheels" style="background:rgba(212,147,107,0.25);color:#fff;">WHEELS</span>'
     elif user["product"] == "Both":
-        prod_chip = '<span class="chip-stlap">STLAP</span> <span class="chip-wheels">WHEELS</span>'
+        prod_chip = ('<span class="chip" style="background:rgba(31,168,154,0.25);color:#fff;">STLAP</span> '
+                     '<span class="chip" style="background:rgba(212,147,107,0.25);color:#fff;">WHEELS</span>')
+
     st.markdown(f"""
     <div class="brand-bar">
-      <h2>🏦 Arkin Sales Portal</h2>
-      <p>{user['name']} · {user['role']} · {user.get('zone','—')} &nbsp; {prod_chip}</p>
+      <div class="brand-row">
+        <span class="b1">ARKA</span><span class="b2">KinetiQ</span>
+      </div>
+      <div class="b-meta">{user['name']} · {user['role']} · {user.get('zone','—')} &nbsp; {prod_chip}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -248,7 +616,8 @@ def kpi_tile(label, value, sub="", trend=None):
 
 
 def section(title, emoji=""):
-    st.markdown(f'<div class="section-title">{emoji} {title}</div>',
+    icon = f"{emoji} " if emoji else ""
+    st.markdown(f'<div class="section-title"><span class="accent-dot"></span>{icon}{title}</div>',
                 unsafe_allow_html=True)
 
 
@@ -258,7 +627,28 @@ def mailto_link(to_email, subject, body, cc_list=None):
 
 
 def status_chip(text, kind="green"):
-    return f'<span class="chip-{kind}">{text}</span>'
+    return f'<span class="chip chip-{kind}">{text}</span>'
+
+
+# =============================================================================
+# PLOTLY THEMING — match the brand
+# =============================================================================
+ARKA_PLOTLY_COLORS = ["#0F3D3E", "#1FA89A", "#D4936B", "#5BAFA8", "#E6B998", "#2D5A5B"]
+
+
+def apply_plotly_theme(fig, height=240):
+    fig.update_layout(
+        height=height,
+        margin=dict(l=10, r=10, t=10, b=10),
+        font=dict(family="Inter, sans-serif", size=11, color="#0F3D3E"),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        legend=dict(orientation="h", y=-0.18,
+                    font=dict(size=10, color="#0F3D3E")),
+        xaxis=dict(showgrid=False, color="#6B8788"),
+        yaxis=dict(gridcolor="#E5EAEA", color="#6B8788"),
+    )
+    return fig
 
 
 # =============================================================================
@@ -303,10 +693,10 @@ def render_sales_manager(user, data):
     fig = go.Figure(go.Funnel(
         y=["Logins", "Sanctions", "Disbursements"],
         x=[row["Actual Login #"], row["Actual Sanction #"], row["Actual Disb #"]],
-        marker={"color": ["#2E75B6", "#1F4E79", "#0F2A47"]},
+        marker={"color": ["#1FA89A", "#0F3D3E", "#D4936B"]},
         textposition="inside", textinfo="value+percent initial",
     ))
-    fig.update_layout(height=240, margin=dict(l=10, r=10, t=10, b=10))
+    apply_plotly_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     section("Conversion & Mix", "🎯")
@@ -327,11 +717,11 @@ def render_sales_manager(user, data):
         "Target": [row["Target Disb #"]] * 4,
     })
     fig = go.Figure()
-    fig.add_bar(x=trend_df["Month"], y=trend_df["Disb #"], name="Actual", marker_color="#2E75B6")
+    fig.add_bar(x=trend_df["Month"], y=trend_df["Disb #"], name="Actual", marker_color="#1FA89A")
     fig.add_scatter(x=trend_df["Month"], y=trend_df["Target"], name="Target",
-                    mode="lines+markers", line=dict(color="#DC2626", dash="dash"))
-    fig.update_layout(height=240, margin=dict(l=10, r=10, t=10, b=10),
-                      legend=dict(orientation="h", y=-0.15))
+                    mode="lines+markers", line=dict(color="#D4936B", dash="dash", width=2),
+                    marker=dict(size=8))
+    apply_plotly_theme(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     section("Achievement & Productivity", "⚡")
@@ -366,9 +756,8 @@ def render_sales_manager(user, data):
         section("Asset Type Mix", "🏷️")
         asset_mix = port.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
         fig = px.pie(asset_mix, names="Asset Type", values="POS (Rs Cr)",
-                     color_discrete_sequence=px.colors.sequential.Blues_r)
-        fig.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
-                          legend=dict(orientation="h", y=-0.1))
+                     color_discrete_sequence=ARKA_PLOTLY_COLORS)
+        apply_plotly_theme(fig, height=270)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -423,8 +812,8 @@ def render_team_leader(user, data):
         for _, r in zero_disb.head(8).iterrows():
             chip = status_chip(r["Status"], r["Kind"])
             st.markdown(
-                f'<div class="kpi-card" style="padding:8px 12px;">'
-                f'<b>{r["EMP Name"]}</b> {chip}<br>'
+                f'<div class="kpi-card" style="padding:10px 12px;">'
+                f'<b>{r["EMP Name"]}</b> &nbsp;{chip}<br>'
                 f'<span class="kpi-sub">{r["Visible To"]} · '
                 f'M-1: {int(r["M-1 Disb #"])} | M-2: {int(r["M-2 Disb #"])} | '
                 f'M-3: {int(r["M-3 Disb #"])}</span></div>',
@@ -451,7 +840,7 @@ def render_team_leader(user, data):
     rm_pick = st.selectbox("Pick RM to nudge", bottom["EMP Name"].tolist(), key="nudge_pick")
     if rm_pick:
         rm_row = bottom[bottom["EMP Name"] == rm_pick].iloc[0]
-        rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkin.com"
+        rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkafincap.com"
         body = (
             f"Hi {rm_pick},\n\n"
             f"Your current month performance shows {int(rm_row['Actual Disb #'])} "
@@ -461,13 +850,14 @@ def render_team_leader(user, data):
             f"Please prioritise pipeline closure this week. Let's discuss in our next 1:1.\n\n"
             f"Regards,\n{user['name']}"
         )
-        cc = [f"rbm.{user['region'].lower().replace(' ', '')}@arkin.com",
-              f"zh.{user['zone'].lower()}@arkin.com"]
+        cc = [f"rbm.{user['region'].lower().replace(' ', '')}@arkafincap.com",
+              f"zh.{user['zone'].lower()}@arkafincap.com"]
         link = mailto_link(rm_email, f"Performance Nudge — {rm_pick}", body, cc)
-        st.markdown(f'<a href="{link}"><button style="width:100%;'
-                    f'background:#1F4E79;color:white;border:none;padding:10px;'
-                    f'border-radius:8px;font-weight:600;cursor:pointer;">'
-                    f'📧 Open Email to Nudge {rm_pick}</button></a>',
+        st.markdown(f'<a href="{link}" style="text-decoration:none;"><button style="width:100%;'
+                    f'background:#0F3D3E;color:white;border:none;padding:12px;'
+                    f'border-radius:10px;font-family:Sora,sans-serif;font-weight:600;'
+                    f'font-size:14px;cursor:pointer;letter-spacing:0.3px;">'
+                    f'📧 Open Email — Nudge {rm_pick}</button></a>',
                     unsafe_allow_html=True)
 
     if len(perf) >= 2:
@@ -552,9 +942,8 @@ def render_senior_leadership(user, data):
         region_perf["Achievement %"] = (region_perf["Disb"] / region_perf["Target"] * 100).round(1)
         st.dataframe(region_perf, use_container_width=True, hide_index=True)
         fig = px.bar(region_perf, x="Region", y=["Disb", "Target"], barmode="group",
-                     color_discrete_sequence=["#2E75B6", "#94A3B8"])
-        fig.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
-                          legend=dict(orientation="h", y=-0.2))
+                     color_discrete_sequence=["#1FA89A", "#D4936B"])
+        apply_plotly_theme(fig, height=280)
         st.plotly_chart(fig, use_container_width=True)
 
     section("Top & Bottom ABMs", "🏆")
@@ -625,22 +1014,45 @@ def render_admin(user, data):
 
 
 # =============================================================================
-# LOGIN
+# LOGIN — Concept 2: Bilingual Welcome
 # =============================================================================
 def login_screen():
+    # Wrap the entire login in a styled container with brand triangles
     st.markdown("""
-    <div class="brand-bar">
-      <h2>🏦 Arkin Sales Portal</h2>
-      <p>Mobile-first performance dashboard</p>
-    </div>
+    <div class="login-page">
+      <div class="tri-1"></div>
+      <div class="tri-2"></div>
+      <div class="tri-3"></div>
+
+      <div class="logo-block">
+        <div class="logo-mark">
+          <span class="lt-1"></span>
+          <span class="lt-2"></span>
+          <span class="lt-3"></span>
+        </div>
+        <div class="logo-wordmark">ARKA<span class="kinetiq">KinetiQ</span></div>
+        <div class="logo-tag">INTELLIGENCE IN MOTION</div>
+      </div>
+
+      <div class="hero-headline">
+        Get ahead,<br>
+        <span class="accent">every day.</span>
+      </div>
+      <div class="hero-sub">
+        Your sales intelligence companion. Numbers, nudges, and next steps —
+        crafted for the way you actually work.
+      </div>
+
+      <div class="login-card-wrapper">
     """, unsafe_allow_html=True)
 
-    with st.form("login_form"):
-        st.markdown("### Sign in")
-        username = st.text_input("Username", placeholder="e.g. rm.3001")
+    with st.form("login_form", clear_on_submit=False):
+        username = st.text_input("Username", placeholder="e.g. rm.3001",
+                                 label_visibility="visible")
         password = st.text_input("Password", type="password",
-                                 placeholder="Demo password: arkin@2026")
-        submitted = st.form_submit_button("Sign in", use_container_width=True)
+                                 placeholder="Demo: arkin@2026",
+                                 label_visibility="visible")
+        submitted = st.form_submit_button("Sign in →", use_container_width=True)
         if submitted:
             u = authenticate(username, password)
             if u:
@@ -650,6 +1062,16 @@ def login_screen():
             else:
                 st.error("❌ Invalid username or password.")
 
+    st.markdown("""
+      </div>
+
+      <div class="login-footer">
+        <span class="powered">Powered by Arka Fincap</span>
+        <span class="group">A Kirloskar Group company</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     with st.expander("🧪 Demo credentials"):
         st.markdown(f"""
 **Password for all demo accounts:** `{DEMO_PASSWORD}`
@@ -658,8 +1080,8 @@ def login_screen():
 |---|---|---|
 | `rm.3001` | Sales Manager | STLAP |
 | `rm.4001` | Sales Manager | Wheels |
-| `abm.2001` | Team Leader (ABM) | STLAP |
-| `abm.2101` | Team Leader (ABM) | Wheels |
+| `abm.2001` | Team Leader | STLAP |
+| `abm.2101` | Team Leader | Wheels |
 | `rbm.201` | Regional Business Manager | STLAP |
 | `rbm.216` | Regional Business Manager | Wheels |
 | `zh.131` | Zonal Head | STLAP |
@@ -680,13 +1102,18 @@ def main():
         login_screen()
         return
 
+    # Page wrap
+    st.markdown('<div class="page">', unsafe_allow_html=True)
+
     user = st.session_state["user"]
     brand_bar(user)
 
     with st.sidebar:
-        st.write(f"**{user['name']}**")
+        st.markdown(f"### {user['name']}")
         st.caption(user["role"])
         st.caption(f"Product: {user['product']}")
+        st.caption(f"Zone: {user.get('zone', '—')}")
+        st.divider()
         if st.button("Sign out", use_container_width=True):
             st.session_state.clear()
             st.rerun()
@@ -700,6 +1127,8 @@ def main():
         render_senior_leadership(user, data)
     elif level == "Admin":
         render_admin(user, data)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
