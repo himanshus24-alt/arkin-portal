@@ -69,7 +69,88 @@ def inject_css():
 .stApp > header { height: 0 !important; }
 .block-container { padding: 0 !important; max-width: 480px !important; background: var(--cream); }
 .stApp { background: var(--cream); font-family: 'Inter', sans-serif; color: var(--ink1); }
-.page { padding: 14px 14px 80px; }
+
+/* Remove top whitespace band that Streamlit adds */
+.stApp [data-testid="stAppViewContainer"] > .main > div:first-child,
+[data-testid="stMainBlockContainer"] {
+    padding-top: 0 !important;
+}
+[data-testid="stVerticalBlock"] > [data-testid="element-container"]:first-child {
+    margin-top: 0 !important;
+}
+
+.page { padding: 0 14px 80px; }
+
+/* ── SIDEBAR (hamburger drawer) — 3/5 width, slides from left ─── */
+[data-testid="stSidebar"] {
+    width: 60vw !important;
+    min-width: 60vw !important;
+    max-width: 60vw !important;
+    background: var(--cream) !important;
+    border-right: 1px solid var(--line);
+}
+[data-testid="stSidebar"] > div {
+    padding-top: 60px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+[data-testid="stSidebar"] .stMarkdown h3 {
+    font-family: 'Sora', sans-serif !important;
+    color: var(--teal) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 12px !important;
+}
+[data-testid="stSidebar"] .stButton button {
+    background: transparent !important;
+    color: var(--ink1) !important;
+    border: 1.5px solid var(--line) !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    margin-bottom: 6px !important;
+    font-weight: 500 !important;
+}
+[data-testid="stSidebar"] .stButton button[kind="primary"] {
+    background: var(--teal) !important;
+    color: #fff !important;
+    border-color: var(--teal) !important;
+    font-weight: 600 !important;
+}
+.sidebar-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 16px 0;
+}
+.sidebar-logout {
+    margin-top: 20px;
+}
+.sidebar-logout .stButton button {
+    background: #FDECEA !important;
+    color: #7A1F0E !important;
+    border-color: #FDECEA !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+/* Make Streamlit's sidebar toggle look like a hamburger and position on right */
+[data-testid="stSidebarCollapsedControl"] {
+    top: 28px !important;
+    left: auto !important;
+    right: 16px !important;
+    background: rgba(255,255,255,0.18) !important;
+    border-radius: 8px !important;
+    padding: 6px 8px !important;
+    z-index: 999 !important;
+}
+[data-testid="stSidebarCollapsedControl"] svg {
+    color: #fff !important;
+    fill: #fff !important;
+    width: 22px !important;
+    height: 22px !important;
+}
 
 /* Brand bar */
 .brand-bar {
@@ -443,6 +524,20 @@ def esc_card(rm_name, status, kind, visible_to, month_trail):
     </div>""")
 
 
+def month_indicator(month):
+    """Small pill showing which month is currently being viewed (visible on main view)."""
+    st.html(f"""<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;">
+      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;
+                   text-transform:uppercase;letter-spacing:.6px;">Viewing</span>
+      <span style="font-family:'Sora',sans-serif;font-size:13px;font-weight:700;
+                   color:#0F3D3E;background:#E6F4F2;padding:3px 10px;
+                   border-radius:14px;">📅 {month}</span>
+      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;">
+        Tap ☰ to change
+      </span>
+    </div>""")
+
+
 def mailto(to, subj, body, cc=None):
     return f"mailto:{to}?cc={','.join(cc or [])}&subject={quote(subj)}&body={quote(body)}"
 
@@ -473,17 +568,19 @@ def plotly_theme(fig, h=240):
 # MONTH SELECTOR
 # =============================================================================
 def month_selector(key="month_sel"):
+    """Renders the month picker INSIDE the sidebar (hamburger drawer).
+    Returns the currently selected month from session state."""
     if key not in st.session_state:
         st.session_state[key] = CURRENT_MONTH
-    cols = st.columns(len(MONTH_ORDER))
-    for i, m in enumerate(MONTH_ORDER):
-        with cols[i]:
+    with st.sidebar:
+        st.markdown("### 📅 Select Month")
+        for m in MONTH_ORDER:
             active = st.session_state[key] == m
             if st.button(
-                f"{'✓ ' if active else ''}{m}",
+                f"{'✓  ' if active else '   '}{m}",
                 key=f"{key}_{m}",
                 use_container_width=True,
-                type="primary" if active else "secondary"
+                type="primary" if active else "secondary",
             ):
                 st.session_state[key] = m
                 st.rerun()
@@ -495,6 +592,7 @@ def month_selector(key="month_sel"):
 # =============================================================================
 def rm_dashboard(user, data):
     sel = month_selector("rm_month")
+    month_indicator(sel)
     perf_m  = scope(data["perf"],  user, month_label=sel)
     port_m  = scope(data["port"],  user, month_label=sel)
     prof_m  = scope(data["prof"],  user, month_label=sel)
@@ -626,6 +724,7 @@ def rm_dashboard(user, data):
 # =============================================================================
 def leader_dashboard(user, data, prod_ov=None):
     sel = month_selector("ldr_month")
+    month_indicator(sel)
     perf_m = scope(data["perf"], user, prod_ov, month_label=sel)
     prof_m = scope(data["prof"], user, prod_ov, month_label=sel)
     port_m = scope(data["port"], user, prod_ov, month_label=sel)
@@ -926,17 +1025,20 @@ def main():
         login_screen()
         return
 
+    user = st.session_state["user"]
+
+    # ── SIDEBAR (hamburger drawer) — user info + sign-out at bottom ──────
+    with st.sidebar:
+        st.markdown(f"### 👤 {user['name']}")
+        st.caption(f"{user['role']}")
+        st.caption(f"Product: {user['product']}")
+        st.caption(f"Zone: {user.get('zone', '—')}")
+        st.html('<div class="sidebar-divider"></div>')
+
+    # Month selector & dashboard content (month_selector adds to sidebar internally)
     st.markdown('<div class="page">', unsafe_allow_html=True)
 
-    user = st.session_state["user"]
     brand_bar(user)
-
-    # Logout — always visible under brand bar
-    _, _, col_logout = st.columns([3, 2, 1])
-    with col_logout:
-        if st.button("Sign out", use_container_width=True):
-            st.session_state.clear()
-            st.rerun()
 
     level = user["level"]
     if   level == "RM":           rm_dashboard(user, data)
@@ -946,6 +1048,15 @@ def main():
     elif level == "Admin":        admin_dashboard(user, data)
 
     st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── SIGN OUT — pinned at bottom of sidebar ──────────────────────────
+    with st.sidebar:
+        st.html('<div class="sidebar-divider"></div>')
+        st.html('<div class="sidebar-logout">')
+        if st.button("🚪 Sign out", use_container_width=True, key="sb_logout"):
+            st.session_state.clear()
+            st.rerun()
+        st.html('</div>')
 
 
 if __name__ == "__main__":
