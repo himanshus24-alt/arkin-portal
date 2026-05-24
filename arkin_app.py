@@ -1,9 +1,12 @@
 """
 Arka KinetiQ — Intelligence in Motion
-======================================
 Streamlit Cloud + GitHub deployment.
-Logout button embedded in brand bar HTML via query_params.
-Whitespace fix via st.markdown unsafe_allow_html (works on Streamlit Cloud).
+
+FIXES applied:
+- Whitespace: st.markdown unsafe_allow_html=True is the only method that reliably
+  injects CSS into the real DOM on Streamlit Cloud (st.html uses shadow DOM).
+- Logout: real st.button in a column — JS->query_params doesn't work in Streamlit Cloud iframe.
+- Month selector: explicit index= on first render + placed in half-width column.
 """
 
 import streamlit as st
@@ -33,188 +36,191 @@ st.set_page_config(
 )
 
 # =============================================================================
-# WHITESPACE FIX
-# .stMainBlockContainer padding-top:0 removes the gap.
-# .stAppHeader must be hidden (not just transparent) — visible:visible reserves space.
-# =============================================================================
-def fix_whitespace():
-    st.html("""<style>
-.stMainBlockContainer {
-    padding-top: 0rem !important;
-    padding-bottom: 0rem;
-    padding-left: 0rem;
-    padding-right: 0rem;
-    max-width: 480px;
-}
-.stAppHeader { display: none !important; }
-#MainMenu    { visibility: hidden; }
-footer       { visibility: hidden; }
-</style>""")
-
-# =============================================================================
-# CSS — fonts, components, theming via st.html
+# CSS  — single injection via st.markdown (unsafe_allow_html=True).
+# This is the ONLY method confirmed to reach Streamlit Cloud's real DOM.
+# st.html() creates a shadow DOM — CSS inside it cannot style the page.
 # =============================================================================
 def inject_css():
-    st.html("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    st.markdown("""
 <style>
-:root {
-    --teal:    #0F3D3E;
-    --teal2:   #1FA89A;
-    --teal-bg: #E6F4F2;
-    --copper:  #D4936B;
-    --cop-bg:  #FDF4ED;
-    --cream:   #F6F8F8;
-    --ink1:    #0F3D3E;
-    --ink2:    #2D5A5B;
-    --ink3:    #6B8788;
-    --line:    #E5EAEA;
-    --sh-sm:   0 1px 3px rgba(15,61,62,0.06);
-    --sh-md:   0 4px 12px rgba(15,61,62,0.08);
-    --sh-lg:   0 12px 32px rgba(15,61,62,0.12);
+/* ── STRIP TOP WHITESPACE ── */
+header[data-testid="stHeader"]   { display: none !important; }
+[data-testid="stToolbar"]        { display: none !important; }
+[data-testid="stDecoration"]     { display: none !important; }
+#MainMenu                        { display: none !important; }
+footer                           { display: none !important; }
+
+/* After hiding the header, kill its leftover space */
+.stMainBlockContainer {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 480px !important;
 }
+section[data-testid="stMain"] { padding-top: 0 !important; }
 
-.stApp { background: var(--cream); font-family: 'Inter', sans-serif; color: var(--ink1); }
-
-/* max-width, padding handled by fix_whitespace() above */
-.block-container { background: var(--cream); }
-
+/* ── APP BG ── */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+:root {
+    --teal:   #0F3D3E; --teal2:  #1FA89A; --teal-bg:#E6F4F2;
+    --copper: #D4936B; --cop-bg: #FDF4ED; --cream:  #F6F8F8;
+    --ink1:   #0F3D3E; --ink2:   #2D5A5B; --ink3:   #6B8788;
+    --line:   #E5EAEA;
+    --sh-sm:  0 1px 3px rgba(15,61,62,0.06);
+    --sh-md:  0 4px 12px rgba(15,61,62,0.08);
+    --sh-lg:  0 12px 32px rgba(15,61,62,0.12);
+}
+.stApp { background: var(--cream) !important; font-family: 'Inter', sans-serif; color: var(--ink1); }
+.block-container, [data-testid="stMainBlockContainer"] { background: var(--cream) !important; }
 .page { padding: 0 14px 80px; }
 
-/* ═══════ SIDEBAR ═══════ */
-/* Hide sidebar and hamburger entirely — month selector is inline */
+/* ── HIDE SIDEBAR & HAMBURGER ── */
 [data-testid="stSidebar"],
 [data-testid="stSidebarCollapsedControl"],
 [data-testid="collapsedControl"],
-button[kind="header"] {
-    display: none !important;
-    visibility: hidden !important;
-    width: 0 !important;
-}
+button[kind="header"] { display: none !important; }
 
-/* ═══════ BRAND BAR ═══════ */
+/* ── BRAND BAR (pure HTML via st.html) ── */
 .brand-bar {
-    background: var(--teal); color: #fff;
+    background: var(--teal); color:#fff;
     padding: 14px 16px; border-radius: 14px;
     margin-bottom: 4px; position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center;
 }
 .brand-bar::after {
-    content: ""; position: absolute; top: -25px; right: -25px;
-    width: 80px; height: 80px; background: var(--copper);
-    clip-path: polygon(50% 0%,100% 100%,0% 100%); opacity: .35; pointer-events: none;
+    content:""; position:absolute; top:-25px; right:-25px;
+    width:80px; height:80px; background:var(--copper);
+    clip-path:polygon(50% 0%,100% 100%,0% 100%); opacity:.35; pointer-events:none;
 }
-.brand-bar-inner { position: relative; z-index: 2; flex: 1; }
-.bb-logo { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
-.bb-arka { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 2px; color: #fff; }
-.bb-kq   { font-family: 'Sora', sans-serif; font-weight: 500; font-size: 15px; font-style: italic; color: var(--copper); }
-.bb-meta { font-family: 'Inter', sans-serif; font-size: 11px; opacity: .85; line-height: 1.5; }
-.bb-chip { background: rgba(255,255,255,.15); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+.brand-bar-inner { position:relative; z-index:2; }
+.bb-logo  { display:flex; align-items:baseline; gap:6px; margin-bottom:5px; }
+.bb-arka  { font-family:'Sora',sans-serif; font-weight:800; font-size:17px; letter-spacing:2px; color:#fff; }
+.bb-kq    { font-family:'Sora',sans-serif; font-weight:500; font-size:15px; font-style:italic; color:var(--copper); }
+.bb-meta  { font-family:'Inter',sans-serif; font-size:11px; opacity:.85; line-height:1.5; }
+.bb-chip  { background:rgba(255,255,255,.15); color:#fff; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; margin-left:4px; }
 
-/* Logout button inside brand bar HTML */
-.bb-logout {
-    position: relative; z-index: 10;
-    background: rgba(255,255,255,0.15);
-    border: 1.5px solid rgba(255,255,255,0.4);
-    color: #fff;
-    font-family: 'Sora', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 7px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-left: 10px;
-    transition: background 0.15s;
+/* ── SIGN OUT BUTTON — column next to brand bar ─────────────────────────
+   Target: the stButton inside the LAST column of the FIRST horizontal block.
+   The first horizontal block is always the brand_bar row.
+   Using :first-of-type on stHorizontalBlock to scope it tightly. */
+[data-testid="stHorizontalBlock"]:first-of-type
+  [data-testid="stColumn"]:last-child
+  .stButton button {
+    background: rgba(255,255,255,0.15) !important;
+    color: #fff !important;
+    border: 1.5px solid rgba(255,255,255,0.5) !important;
+    border-radius: 10px !important;
+    font-family: 'Sora', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 6px 4px !important;
+    height: 62px !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    margin-top: 0 !important;
 }
-.bb-logout:hover {
-    background: rgba(200,85,61,0.7);
-    border-color: rgba(200,85,61,0.9);
+[data-testid="stHorizontalBlock"]:first-of-type
+  [data-testid="stColumn"]:last-child
+  .stButton button:hover {
+    background: rgba(200,85,61,0.75) !important;
+    border-color: rgba(200,85,61,0.9) !important;
+}
+/* Remove gap between brand col and sign out col */
+[data-testid="stHorizontalBlock"]:first-of-type {
+    gap: 6px !important;
+    align-items: stretch !important;
+    margin-bottom: 4px !important;
 }
 
-/* KPI tiles */
-.kpi-card { background: #fff; border-radius: 12px; padding: 12px 13px;
-            border: 1px solid var(--line); box-shadow: var(--sh-sm); margin-bottom: 8px; }
-.kpi-label { font-size: 10px; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .6px; }
-.kpi-value { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink1); margin: 4px 0; line-height: 1.1; }
-.kpi-sub   { font-size: 11px; color: var(--ink3); font-weight: 500; }
-.kpi-up    { color: var(--teal2); font-size: 12px; }
-.kpi-down  { color: #C8553D; font-size: 12px; }
+/* ── MONTH SELECTOR — half width ── */
+[data-testid="stHorizontalBlock"]:nth-of-type(2) {
+    margin-bottom: 2px !important;
+}
 
-/* Info cards */
-.nudge-card    { background: var(--cop-bg); border-left: 3px solid var(--copper); padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #6B3F1F; }
-.announce-card { background: var(--teal-bg); border-left: 3px solid var(--teal2); padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: var(--teal); }
-.action-card   { background: #FDECEA; border-left: 3px solid #C8553D; padding: 12px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; color: #7A1F0E; }
-.esc-card      { background: #fff; border-radius: 10px; border: 1px solid var(--line); padding: 10px 12px; margin-bottom: 8px; box-shadow: var(--sh-sm); }
+/* ── KPI TILES ── */
+.kpi-card  { background:#fff; border-radius:12px; padding:12px 13px; border:1px solid var(--line); box-shadow:var(--sh-sm); margin-bottom:8px; }
+.kpi-label { font-size:10px; font-weight:600; color:var(--ink3); text-transform:uppercase; letter-spacing:.6px; }
+.kpi-value { font-family:'Sora',sans-serif; font-size:22px; font-weight:700; color:var(--ink1); margin:4px 0; line-height:1.1; }
+.kpi-sub   { font-size:11px; color:var(--ink3); font-weight:500; }
+.kpi-up    { color:var(--teal2); font-size:12px; }
+.kpi-down  { color:#C8553D; font-size:12px; }
 
-/* Status chips */
-.chip-amber { background: var(--cop-bg); color: #6B3F1F; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.chip-red   { background: #FDECEA; color: #7A1F0E; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.chip-green { background: var(--teal-bg); color: var(--teal); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+/* ── INFO CARDS ── */
+.nudge-card    { background:var(--cop-bg); border-left:3px solid var(--copper); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#6B3F1F; }
+.announce-card { background:var(--teal-bg); border-left:3px solid var(--teal2); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:var(--teal); }
+.action-card   { background:#FDECEA; border-left:3px solid #C8553D; padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#7A1F0E; }
+.esc-card      { background:#fff; border-radius:10px; border:1px solid var(--line); padding:10px 12px; margin-bottom:8px; box-shadow:var(--sh-sm); }
 
-/* Section heading */
-.sec { font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 700; color: var(--ink1); margin: 14px 0 8px; letter-spacing: .2px; }
-.sec .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--copper); margin-right: 8px; vertical-align: middle; }
+/* ── STATUS CHIPS ── */
+.chip-amber { background:var(--cop-bg); color:#6B3F1F; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
+.chip-red   { background:#FDECEA; color:#7A1F0E; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
+.chip-green { background:var(--teal-bg); color:var(--teal); padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
 
-/* Streamlit buttons */
+/* ── SECTION HEADING ── */
+.sec     { font-family:'Sora',sans-serif; font-size:13px; font-weight:700; color:var(--ink1); margin:14px 0 8px; letter-spacing:.2px; }
+.sec .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--copper); margin-right:8px; vertical-align:middle; }
+
+/* ── STREAMLIT BUTTONS (default teal) ── */
 .stButton button {
-    width: 100%; background: var(--teal) !important; color: #fff !important;
-    border: none !important; border-radius: 10px !important; padding: 11px 16px !important;
-    font-family: 'Sora', sans-serif !important; font-weight: 600 !important; font-size: 14px !important;
+    width:100%; background:var(--teal) !important; color:#fff !important;
+    border:none !important; border-radius:10px !important; padding:11px 16px !important;
+    font-family:'Sora',sans-serif !important; font-weight:600 !important; font-size:14px !important;
 }
-.stButton button:hover { background: var(--teal2) !important; }
+.stButton button:hover { background:var(--teal2) !important; }
 
-/* Inputs */
+/* ── INPUTS ── */
 .stTextInput input, .stSelectbox > div > div {
-    border-radius: 10px !important; border: 1.5px solid var(--line) !important;
-    font-family: 'Inter', sans-serif !important; font-size: 14px !important;
-    padding: 10px 14px !important; background: #fff !important;
+    border-radius:10px !important; border:1.5px solid var(--line) !important;
+    font-family:'Inter',sans-serif !important; font-size:14px !important;
+    padding:10px 14px !important; background:#fff !important;
 }
-.stTextInput input:focus { border-color: var(--copper) !important; box-shadow: 0 0 0 3px rgba(212,147,107,.15) !important; }
+.stTextInput input:focus { border-color:var(--copper) !important; box-shadow:0 0 0 3px rgba(212,147,107,.15) !important; }
 .stTextInput label, .stSelectbox label {
-    font-family: 'Inter', sans-serif !important; font-size: 11px !important;
-    font-weight: 600 !important; color: var(--ink2) !important; text-transform: uppercase; letter-spacing: .5px;
+    font-family:'Inter',sans-serif !important; font-size:11px !important;
+    font-weight:600 !important; color:var(--ink2) !important; text-transform:uppercase; letter-spacing:.5px;
 }
 
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] { gap: 4px; background: #fff; border-radius: 10px; padding: 4px; border: 1px solid var(--line); }
+/* ── TABS ── */
+.stTabs [data-baseweb="tab-list"] { gap:4px; background:#fff; border-radius:10px; padding:4px; border:1px solid var(--line); }
 .stTabs [data-baseweb="tab"] {
-    font-family: 'Sora', sans-serif !important; font-size: 12px !important; font-weight: 600 !important;
-    color: var(--ink3) !important; padding: 8px 4px !important; border-radius: 8px !important;
-    flex: 1; background: transparent !important; border: none !important;
+    font-family:'Sora',sans-serif !important; font-size:12px !important; font-weight:600 !important;
+    color:var(--ink3) !important; padding:8px 4px !important; border-radius:8px !important;
+    flex:1; background:transparent !important; border:none !important;
 }
-.stTabs [aria-selected="true"] { background: var(--teal) !important; color: #fff !important; }
-.stTabs [data-baseweb="tab-panel"] { padding-top: 12px; }
-.stTabs [data-baseweb="tab-highlight"] { display: none; }
+.stTabs [aria-selected="true"] { background:var(--teal) !important; color:#fff !important; }
+.stTabs [data-baseweb="tab-panel"] { padding-top:12px; }
+.stTabs [data-baseweb="tab-highlight"] { display:none; }
 
-/* Radio */
-.stRadio > div { gap: 4px !important; background: #fff; padding: 4px; border-radius: 10px; border: 1px solid var(--line); display: flex !important; }
-.stRadio label { font-family: 'Inter', sans-serif; font-size: 13px; }
+/* ── RADIO ── */
+.stRadio > div { gap:4px !important; background:#fff; padding:4px; border-radius:10px; border:1px solid var(--line); display:flex !important; }
+.stRadio label { font-family:'Inter',sans-serif; font-size:13px; }
 
-/* LOGIN */
-.login-outer { background: var(--cream); position: relative; overflow: visible; }
-.login-outer::before { content: ""; position: fixed; top: 0; left: 0; width: 88px; height: 88px; background: var(--teal); clip-path: polygon(0 0,100% 0,0 100%); z-index: 1; }
-.login-outer::after  { content: ""; position: fixed; bottom: 0; right: 0; width: 100px; height: 100px; background: var(--copper); clip-path: polygon(100% 100%,100% 0,0 100%); z-index: 1; opacity: .88; }
-.login-inner { position: relative; z-index: 5; padding: 96px 22px 0px; max-width: 440px; margin: 0 auto; }
-.login-arka { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 30px; color: var(--teal); letter-spacing: 2px; }
-.login-kq   { font-family: 'Sora', sans-serif; font-weight: 500; font-size: 22px; color: var(--copper); font-style: italic; letter-spacing: .5px; margin-left: 6px; }
-.login-tag  { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: var(--ink3); letter-spacing: 1.8px; text-transform: uppercase; margin-top: 6px; }
-.login-headline { font-family: 'Sora', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--teal); letter-spacing: -.3px; margin-top: 12px; }
-.login-accent { color: var(--copper); font-style: italic; }
-.login-sub { font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink3); margin-top: 6px; line-height: 1.5; }
-[data-testid="stForm"] { background: #fff; border-radius: 16px; padding: 18px 16px 16px; box-shadow: var(--sh-lg); border: 1px solid var(--line); margin: 0 22px; }
-.login-footer { margin-top: 12px; text-align: center; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--ink3); padding-bottom: 80px; }
-.login-footer .pw  { font-weight: 600; color: var(--ink2); }
-.login-footer .grp { opacity: .7; display: block; margin-top: 2px; }
+/* ── LOGIN ── */
+.login-outer::before { content:""; position:fixed; top:0; left:0; width:88px; height:88px; background:var(--teal); clip-path:polygon(0 0,100% 0,0 100%); z-index:1; }
+.login-outer::after  { content:""; position:fixed; bottom:0; right:0; width:100px; height:100px; background:var(--copper); clip-path:polygon(100% 100%,100% 0,0 100%); z-index:1; opacity:.88; }
+.login-inner { position:relative; z-index:5; padding:96px 22px 0; max-width:440px; margin:0 auto; }
+.login-arka  { font-family:'Sora',sans-serif; font-weight:800; font-size:30px; color:var(--teal); letter-spacing:2px; }
+.login-kq    { font-family:'Sora',sans-serif; font-weight:500; font-size:22px; color:var(--copper); font-style:italic; letter-spacing:.5px; margin-left:6px; }
+.login-tag   { font-family:'Inter',sans-serif; font-size:10px; font-weight:600; color:var(--ink3); letter-spacing:1.8px; text-transform:uppercase; margin-top:6px; }
+.login-headline { font-family:'Sora',sans-serif; font-size:26px; font-weight:700; line-height:1.15; color:var(--teal); letter-spacing:-.3px; margin-top:12px; }
+.login-accent { color:var(--copper); font-style:italic; }
+.login-sub   { font-family:'Inter',sans-serif; font-size:13px; color:var(--ink3); margin-top:6px; line-height:1.5; }
+[data-testid="stForm"] { background:#fff; border-radius:16px; padding:18px 16px 16px; box-shadow:var(--sh-lg); border:1px solid var(--line); margin:0 22px; }
+.login-footer { margin-top:12px; text-align:center; font-family:'Inter',sans-serif; font-size:11px; color:var(--ink3); padding-bottom:80px; }
+.login-footer .pw  { font-weight:600; color:var(--ink2); }
+.login-footer .grp { opacity:.7; display:block; margin-top:2px; }
 
-/* Misc */
-.stCaption, [data-testid="stCaptionContainer"] { font-family: 'Inter', sans-serif !important; color: var(--ink3) !important; font-size: 12px !important; }
-.stDataFrame { font-size: 12px; }
-.sidebar-divider { height: 1px; background: var(--line); margin: 16px 0; }
+/* ── MISC ── */
+.stCaption, [data-testid="stCaptionContainer"] { font-family:'Inter',sans-serif !important; color:var(--ink3) !important; font-size:12px !important; }
+.stDataFrame { font-size:12px; }
 </style>
+""", unsafe_allow_html=True)
+
+    # Google Fonts + component-scoped CSS that CAN live in shadow DOM
+    st.html("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 """)
 
 
@@ -261,9 +267,12 @@ def build_users():
     for _, r in org[org["Level"] == "ZH"].iterrows():
         u[f"zh.{r['ID']}"] = dict(name=r["Name"], role="Zonal Head", level="ZH",
             id=int(r["ID"]), product=r["Product"], zone=r["Zone"], region="All", pw=DEMO_HASH)
-    u["cxo"]     = dict(name="Chief Business Officer",  role="CXO",         level="CXO",   id="CXO001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
-    u["central"] = dict(name="Central Analytics Lead",  role="Central Team", level="CXO",   id="CEN001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
-    u["admin"]   = dict(name="System Administrator",    role="Admin",        level="Admin", id="ADM001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+    u["cxo"]     = dict(name="Chief Business Officer",  role="CXO",         level="CXO",
+                        id="CXO001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+    u["central"] = dict(name="Central Analytics Lead",  role="Central Team", level="CXO",
+                        id="CEN001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
+    u["admin"]   = dict(name="System Administrator",    role="Admin",        level="Admin",
+                        id="ADM001", product="SRL", zone="All", region="All", pw=DEMO_HASH)
     return u
 
 
@@ -279,15 +288,14 @@ def do_login(username, password):
 # RBAC
 # =============================================================================
 def scope(df, user, prod_ov=None, month_label=None):
-    if df is None or df.empty:
-        return df
+    if df is None or df.empty: return df
     level = user["level"]
     prod  = prod_ov or user["product"]
     if month_label and "Month Label" in df.columns:
         df = df[df["Month Label"] == month_label]
     if prod in ("STLAP", "Wheels") and "Product" in df.columns:
         df = df[df["Product"] == prod]
-    if level in ("CXO", "Admin"):  return df
+    if level in ("CXO", "Admin"): return df
     if level == "ZH"  and "ZH ID"  in df.columns: return df[df["ZH ID"]  == user["id"]]
     if level == "RBM" and "RBM ID" in df.columns: return df[df["RBM ID"] == user["id"]]
     if level == "ABM" and "ABM ID" in df.columns: return df[df["ABM ID"] == user["id"]]
@@ -302,21 +310,22 @@ def scope(df, user, prod_ov=None, month_label=None):
 # =============================================================================
 def build_escalation_table(perf_all, user, prod_ov=None):
     prod = prod_ov or user["product"]
-    df = perf_all.copy()
+    df   = perf_all.copy()
     if prod in ("STLAP", "Wheels") and "Product" in df.columns:
         df = df[df["Product"] == prod]
     level = user["level"]
     if level == "ZH"  and "ZH ID"  in df.columns: df = df[df["ZH ID"]  == user["id"]]
     if level == "RBM" and "RBM ID" in df.columns: df = df[df["RBM ID"] == user["id"]]
     if level == "ABM" and "ABM ID" in df.columns: df = df[df["ABM ID"] == user["id"]]
-    if df.empty or "Month Label" not in df.columns:
-        return pd.DataFrame()
+    if df.empty or "Month Label" not in df.columns: return pd.DataFrame()
+
     pivot = df.pivot_table(
         index=["Emp ID", "EMP Name", "ABM Name", "RBM Name", "ZH NAME"],
         columns="Month Label", values="Actual Disb #", aggfunc="sum"
     ).fillna(0)
     available = [m for m in MONTH_ORDER if m in pivot.columns]
-    pivot = pivot[available]
+    pivot     = pivot[available]
+
     results = []
     for idx, row in pivot.iterrows():
         streak = 0
@@ -331,44 +340,46 @@ def build_escalation_table(perf_all, user, prod_ov=None):
         results.append({"RM": idx[1], "ABM": idx[2], "Streak": streak,
             "Status": status, "Kind": kind, "Visible To": visible,
             **{m: int(row[m]) for m in available}})
+
     esc = pd.DataFrame(results)
-    if not esc.empty:
-        esc = esc.sort_values("Streak", ascending=False)
-    return esc
+    return esc.sort_values("Streak", ascending=False) if not esc.empty else esc
 
 
 # =============================================================================
 # UI HELPERS
 # =============================================================================
-
 def brand_bar(user, prod=None):
     """
-    Brand bar with logout button baked in as pure HTML.
-    Clicking it triggers a hidden Streamlit button via JS — 
-    most reliable logout pattern on Streamlit Cloud.
+    Brand bar (HTML) + Sign out button (real st.button in adjacent column).
+    Real st.button is the ONLY reliable logout on Streamlit Cloud.
+    Styled via CSS selector targeting last column of first horizontal block.
     """
     p = prod or user["product"]
-    st.html(f"""
-    <div class="brand-bar">
-      <div class="brand-bar-inner">
-        <div class="bb-logo">
-          <span class="bb-arka">ARKA</span><span class="bb-kq">KinetiQ</span>
-        </div>
-        <div class="bb-meta">
-          {user['name']} · {user['role']} · {user.get('zone','—')}
-          <span class="bb-chip">{p}</span>
-        </div>
-      </div>
-      <button class="bb-logout" onclick="var url=new URL(window.parent.location.href);url.searchParams.set('logout','1');window.parent.location.href=url.toString();">🚪 Sign out</button>
-    </div>
-    """)
+    col_brand, col_btn = st.columns([5, 1])
+    with col_brand:
+        st.html(f"""
+        <div class="brand-bar">
+          <div class="brand-bar-inner">
+            <div class="bb-logo">
+              <span class="bb-arka">ARKA</span><span class="bb-kq">KinetiQ</span>
+            </div>
+            <div class="bb-meta">
+              {user['name']} · {user['role']} · {user.get('zone','—')}
+              <span class="bb-chip">{p}</span>
+            </div>
+          </div>
+        </div>""")
+    with col_btn:
+        if st.button("🚪\nSign out", key="signout_btn", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
 
 
 def kpi(label, value, sub="", trend=None):
     th = ""
     if trend is not None:
         cls = "kpi-up" if trend >= 0 else "kpi-down"
-        th = f'<span class="{cls}"> {"▲" if trend >= 0 else "▼"} {abs(trend):.1f}%</span>'
+        th  = f'<span class="{cls}"> {"▲" if trend >= 0 else "▼"} {abs(trend):.1f}%</span>'
     st.html(f"""<div class="kpi-card">
       <div class="kpi-label">{label}</div>
       <div class="kpi-value">{value}{th}</div>
@@ -384,17 +395,10 @@ def announce_card(text): st.html(f'<div class="announce-card">{text}</div>')
 def action_card(text):   st.html(f'<div class="action-card">{text}</div>')
 
 def esc_card(rm_name, status, kind, visible_to, month_trail):
-    chip_html = f'<span class="chip-{kind}">{status}</span>'
+    chip = f'<span class="chip-{kind}">{status}</span>'
     st.html(f"""<div class="esc-card">
-      <b>{rm_name}</b> &nbsp;{chip_html}<br>
+      <b>{rm_name}</b> &nbsp;{chip}<br>
       <span style="font-size:11px;color:#6B8788;">{visible_to} · {month_trail}</span>
-    </div>""")
-
-def month_indicator(month):
-    st.html(f"""<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;">
-      <span style="font-family:'Sora',sans-serif;font-size:12px;font-weight:700;
-                   color:#0F3D3E;background:#E6F4F2;padding:4px 12px;border-radius:14px;">📅 {month}</span>
-      <span style="font-family:'Inter',sans-serif;font-size:11px;color:#6B8788;margin-left:4px;">— change in menu ☰</span>
     </div>""")
 
 def mailto(to, subj, body, cc=None):
@@ -420,17 +424,23 @@ def plotly_theme(fig, h=240):
 
 
 # =============================================================================
-# MONTH SELECTOR — inline selectbox, no sidebar needed
-# Don't pass index= when key= is used; Streamlit reads value from session_state.
+# MONTH SELECTOR — half-width column, explicit index so first render is correct
 # =============================================================================
 def month_selector(key="month_sel"):
+    # Ensure valid session state before widget renders
     if key not in st.session_state or st.session_state[key] not in MONTH_ORDER:
         st.session_state[key] = CURRENT_MONTH
-    selected = st.selectbox(
-        "📅 Viewing month",
-        MONTH_ORDER,
-        key=key,
-    )
+
+    default_idx = MONTH_ORDER.index(st.session_state[key])
+
+    col_sel, col_gap = st.columns([1, 1])
+    with col_sel:
+        selected = st.selectbox(
+            "📅 Viewing month",
+            MONTH_ORDER,
+            index=default_idx,   # explicit — so first render shows the right month
+            key=key,
+        )
     return selected
 
 
@@ -438,15 +448,14 @@ def month_selector(key="month_sel"):
 # SALES MANAGER (RM) DASHBOARD
 # =============================================================================
 def rm_dashboard(user, data):
-    sel = month_selector("rm_month")
+    sel     = month_selector("rm_month")
     perf_m  = scope(data["perf"],  user, month_label=sel)
     port_m  = scope(data["port"],  user, month_label=sel)
     prof_m  = scope(data["prof"],  user, month_label=sel)
     notif_m = scope(data["notif"], user, month_label=sel)
 
     if perf_m.empty:
-        st.warning("No data for this month.")
-        return
+        st.warning("No data for this month."); return
     row = perf_m.iloc[0]
 
     t1, t2, t3 = st.tabs(["🎯 Focus", "📊 Performance", "💼 Portfolio"])
@@ -457,8 +466,7 @@ def rm_dashboard(user, data):
             nrow = notif_m.iloc[0]
             for i in range(1, 6):
                 n = str(nrow.get(f"Notification {i}", ""))
-                if n.strip() and n != "nan":
-                    nudge_card(n)
+                if n.strip() and n != "nan": nudge_card(n)
         sec("Announcements", "📢")
         announce_card("📌 Quarterly target review on 30th — submit branch numbers by EOD Friday.")
         announce_card("🎯 New TAT SLA: Login → Sanction within 5 working days from June.")
@@ -480,9 +488,9 @@ def rm_dashboard(user, data):
         with c[1]: kpi("Sanctions", f"{int(row['Actual Sanction #'])}", f"Tgt {int(row['Target Sanction #'])}")
         with c[2]: kpi("Disb",      f"{int(row['Actual Disb #'])}",     f"Tgt {int(row['Target Disb #'])}")
         fig = go.Figure(go.Funnel(
-            y=["Logins", "Sanctions", "Disb"],
+            y=["Logins","Sanctions","Disb"],
             x=[row["Actual Login #"], row["Actual Sanction #"], row["Actual Disb #"]],
-            marker={"color": ["#1FA89A", "#0F3D3E", "#D4936B"]},
+            marker={"color":["#1FA89A","#0F3D3E","#D4936B"]},
             textposition="inside", textinfo="value+percent initial"))
         st.plotly_chart(plotly_theme(fig), use_container_width=True)
         sec("Conversion & Mix", "🎯")
@@ -498,12 +506,12 @@ def rm_dashboard(user, data):
         perf_all_rm = scope(data["perf"], user)
         if not perf_all_rm.empty and "Month Label" in perf_all_rm.columns:
             trend = perf_all_rm.groupby("Month Label").agg(
-                Disb=("Actual Disb #", "sum"), Target=("Target Disb #", "mean")
+                Disb=("Actual Disb #","sum"), Target=("Target Disb #","mean")
             ).reindex(MONTH_ORDER).reset_index()
             fig = go.Figure()
             fig.add_bar(x=trend["Month Label"], y=trend["Disb"], name="Actual", marker_color="#1FA89A")
-            fig.add_scatter(x=trend["Month Label"], y=trend["Target"], name="Target", mode="lines+markers",
-                            line=dict(color="#D4936B", dash="dash", width=2), marker=dict(size=8))
+            fig.add_scatter(x=trend["Month Label"], y=trend["Target"], name="Target",
+                mode="lines+markers", line=dict(color="#D4936B", dash="dash", width=2), marker=dict(size=8))
             st.plotly_chart(plotly_theme(fig), use_container_width=True)
         sec("Achievement & Productivity", "⚡")
         c1, c2 = st.columns(2)
@@ -511,8 +519,8 @@ def rm_dashboard(user, data):
             kpi("CM Achievement", f"{row['CM Achievement %']:.1f}%", "Of monthly target")
             kpi("PF %", f"{row['Actual PF %']:.2f}%", f"Tgt {row['Target PF %']:.2f}%")
         with c2:
-            kpi("Cross-sell", f"{row['Cross Sell %']:.1f}%", "Insurance + bundle")
-            kpi("Productivity", f"{row['Productivity (Disb/RM)']:.1f}", "Disb/RM/month")
+            kpi("Cross-sell",   f"{row['Cross Sell %']:.1f}%",              "Insurance + bundle")
+            kpi("Productivity", f"{row['Productivity (Disb/RM)']:.1f}",     "Disb/RM/month")
         fee = row["Actual Disb Amount (Rs Cr)"] * (row["Actual PF %"] + row["Actual Insurance %"]) / 100
         kpi("Fee Income", f"₹{fee:.3f} Cr", "PF + Insurance this month")
 
@@ -533,16 +541,16 @@ def rm_dashboard(user, data):
                 kpi("Port. IRR",  f"{prow['Portfolio IRR %']:.2f}%", "Yield")
         if not port_m.empty:
             sec("Asset Mix", "🏷️")
-            am = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
+            am  = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
             fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)", color_discrete_sequence=PALETTE)
             st.plotly_chart(plotly_theme(fig, 260), use_container_width=True)
             sec("PAR Bucket", "📊")
-            pm = port_m.groupby("PAR Bucket")["POS (Rs Cr)"].sum().reset_index()
-            order = ["Current", "1-30 DPD", "31-60 DPD", "61-90 DPD", "90+ DPD"]
+            pm  = port_m.groupby("PAR Bucket")["POS (Rs Cr)"].sum().reset_index()
+            order = ["Current","1-30 DPD","31-60 DPD","61-90 DPD","90+ DPD"]
             pm["PAR Bucket"] = pd.Categorical(pm["PAR Bucket"], categories=order, ordered=True)
-            pm = pm.sort_values("PAR Bucket")
+            pm  = pm.sort_values("PAR Bucket")
             fig = px.bar(pm, x="PAR Bucket", y="POS (Rs Cr)", color="PAR Bucket",
-                         color_discrete_sequence=["#1FA89A","#5BAFA8","#D4936B","#E6B998","#C8553D"])
+                color_discrete_sequence=["#1FA89A","#5BAFA8","#D4936B","#E6B998","#C8553D"])
             plotly_theme(fig); fig.update_layout(showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
 
@@ -551,16 +559,15 @@ def rm_dashboard(user, data):
 # LEADER (ABM / RBM / ZH) DASHBOARD
 # =============================================================================
 def leader_dashboard(user, data, prod_ov=None):
-    sel = month_selector("ldr_month")
+    sel    = month_selector("ldr_month")
     perf_m = scope(data["perf"], user, prod_ov, month_label=sel)
     prof_m = scope(data["prof"], user, prod_ov, month_label=sel)
     port_m = scope(data["port"], user, prod_ov, month_label=sel)
 
     if perf_m.empty:
-        st.warning("No team data for this month.")
-        return
+        st.warning("No team data for this month."); return
 
-    t1, t2, t3, t4 = st.tabs(["🎯 Focus", "📊 Performance", "💼 Portfolio", "💵 Profitability"])
+    t1, t2, t3, t4 = st.tabs(["🎯 Focus","📊 Performance","💼 Portfolio","💵 Profitability"])
 
     with t1:
         sec("Escalation Tracker", "🚨")
@@ -569,40 +576,40 @@ def leader_dashboard(user, data, prod_ov=None):
         if esc.empty:
             st.success("✅ No escalations active.")
         else:
-            n_amber = len(esc[esc["Kind"] == "amber"])
-            n_red   = len(esc[esc["Kind"] == "red"])
-            c1, c2 = st.columns(2)
+            n_amber = len(esc[esc["Kind"]=="amber"])
+            n_red   = len(esc[esc["Kind"]=="red"])
+            c1, c2  = st.columns(2)
             with c1: kpi("Amber Alerts", f"{n_amber}", "Action needed")
             with c2: kpi("Red Alerts",   f"{n_red}",   "Urgent")
             available_m = [m for m in MONTH_ORDER if m in esc.columns]
             for _, r in esc.head(15).iterrows():
-                trail = " | ".join(f"{m}: {r.get(m, '—')}" for m in available_m)
+                trail = " | ".join(f"{m}: {r.get(m,'—')}" for m in available_m)
                 esc_card(r["RM"], r["Status"], r["Kind"], r["Visible To"], trail)
             if len(esc) > 15:
                 st.caption(f"+ {len(esc)-15} more RMs")
                 st.download_button("⬇ Download full escalation list",
                     esc.to_csv(index=False).encode(),
                     file_name=f"escalations_{sel}.csv", mime="text/csv", use_container_width=True)
+
         sec("Focus of the Month", "🎯")
         st.caption("Low performers (< 60% target)")
         low = perf_m[perf_m["Actual Disb #"] < perf_m["Target Disb #"] * 0.6][
-            ["EMP Name", "Actual Disb #", "Target Disb #", "CM Achievement %"]].head(10)
-        if low.empty:
-            st.success("✅ No low performers this month.")
-        else:
-            st.dataframe(low.rename(columns={"EMP Name": "RM"}), use_container_width=True, hide_index=True)
+            ["EMP Name","Actual Disb #","Target Disb #","CM Achievement %"]].head(10)
+        if low.empty: st.success("✅ No low performers this month.")
+        else: st.dataframe(low.rename(columns={"EMP Name":"RM"}), use_container_width=True, hide_index=True)
+
         sec("Quick Nudge", "✉️")
-        bottom = perf_m.sort_values("Actual Disb #").head(15)
+        bottom  = perf_m.sort_values("Actual Disb #").head(15)
         rm_pick = st.selectbox("Pick RM to nudge", bottom["EMP Name"].tolist(), key="nudge_sel")
         if rm_pick:
-            rm_row   = bottom[bottom["EMP Name"] == rm_pick].iloc[0]
-            rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkafincap.com"
+            rm_row   = bottom[bottom["EMP Name"]==rm_pick].iloc[0]
+            rm_email = f"{rm_pick.lower().replace(' ','.')}@arkafincap.com"
             body = (f"Hi {rm_pick},\n\nYour {sel} performance: "
                     f"{int(rm_row['Actual Disb #'])} disbursements against target "
                     f"{int(rm_row['Target Disb #'])}.\n\nPlease prioritise pipeline closure. "
                     f"Let's connect this week.\n\nRegards,\n{user['name']}")
             link = mailto(rm_email, f"Performance Nudge {sel} — {rm_pick}", body,
-                          ["rbm@arkafincap.com", "zh@arkafincap.com"])
+                          ["rbm@arkafincap.com","zh@arkafincap.com"])
             nudge_email_btn(f"Open Email — Nudge {rm_pick}", link)
 
     with t2:
@@ -613,76 +620,78 @@ def leader_dashboard(user, data, prod_ov=None):
         with c1:
             kpi("RMs",      f"{perf_m['Emp ID'].nunique()}", "Active")
             kpi("Disb #",   f"{total_disb}", f"Tgt {total_tgt}",
-                trend=(total_disb - total_tgt) / max(1, total_tgt) * 100)
+                trend=(total_disb-total_tgt)/max(1,total_tgt)*100)
         with c2:
             kpi("Disb Amt", f"₹{perf_m['Actual Disb Amount (Rs Cr)'].sum():.1f} Cr", "MTD")
             kpi("Avg Conv.",f"{perf_m['Actual Conversion %'].mean():.1f}%", "Login→Disb")
-        sec("Leaderboard — Disbursements", "🏆")
+        sec("Leaderboard — Disbursements","🏆")
         lb = perf_m.sort_values("Actual Disb #", ascending=False).head(10)[
-            ["EMP Name", "Actual Disb #", "Target Disb #", "Actual Conversion %", "IRR Mix %"]
-        ].rename(columns={"EMP Name":"RM","Actual Disb #":"Disb","Target Disb #":"Tgt","Actual Conversion %":"Conv%","IRR Mix %":"IRR%"})
+            ["EMP Name","Actual Disb #","Target Disb #","Actual Conversion %","IRR Mix %"]
+        ].rename(columns={"EMP Name":"RM","Actual Disb #":"Disb","Target Disb #":"Tgt",
+                           "Actual Conversion %":"Conv%","IRR Mix %":"IRR%"})
         st.dataframe(lb, use_container_width=True, hide_index=True)
-        sec("Leaderboard — IRR Mix", "💰")
+        sec("Leaderboard — IRR Mix","💰")
         irr_lb = perf_m.sort_values("IRR Mix %", ascending=False).head(10)[
-            ["EMP Name", "IRR Mix %", "Actual Disb #", "LTV %"]
+            ["EMP Name","IRR Mix %","Actual Disb #","LTV %"]
         ].rename(columns={"EMP Name":"RM","IRR Mix %":"IRR%","Actual Disb #":"Disb"})
         st.dataframe(irr_lb, use_container_width=True, hide_index=True)
-        sec("4-Month Peer Trend", "👥")
+        sec("4-Month Peer Trend","👥")
         perf_all = scope(data["perf"], user, prod_ov)
         if not perf_all.empty and "Month Label" in perf_all.columns:
-            tg = perf_all.groupby(["EMP Name", "Month Label"])["Actual Disb #"].sum().reset_index()
+            tg  = perf_all.groupby(["EMP Name","Month Label"])["Actual Disb #"].sum().reset_index()
             piv = tg.pivot(index="EMP Name", columns="Month Label", values="Actual Disb #").fillna(0)
             piv = piv.reindex(columns=[m for m in MONTH_ORDER if m in piv.columns])
-            piv["Total"] = piv.sum(axis=1)
-            piv["Avg/Mo"] = (piv["Total"] / max(1, len(piv.columns)-1)).round(1)
+            piv["Total"]  = piv.sum(axis=1)
+            piv["Avg/Mo"] = (piv["Total"]/max(1,len(piv.columns)-1)).round(1)
             piv = piv.sort_values("Total", ascending=False).head(15).reset_index()
             st.dataframe(piv, use_container_width=True, hide_index=True)
-        if user["level"] in ("RBM", "ZH", "CXO"):
-            sec("Performance by Region", "🗺️")
-            reg = perf_m.groupby("Region").agg(Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
-            reg["Ach %"] = (reg["Disb"] / reg["Target"] * 100).round(1)
+        if user["level"] in ("RBM","ZH","CXO"):
+            sec("Performance by Region","🗺️")
+            reg = perf_m.groupby("Region").agg(Disb=("Actual Disb #","sum"),Target=("Target Disb #","sum")).reset_index()
+            reg["Ach %"] = (reg["Disb"]/reg["Target"]*100).round(1)
             st.dataframe(reg, use_container_width=True, hide_index=True)
-            fig = px.bar(reg, x="Region", y=["Disb", "Target"], barmode="group", color_discrete_sequence=["#1FA89A","#D4936B"])
-            st.plotly_chart(plotly_theme(fig, 260), use_container_width=True)
-            sec("Top & Bottom ABMs", "🏆")
-            abm_p = perf_m.groupby("ABM Name").agg(Disb=("Actual Disb #","sum"), Target=("Target Disb #","sum")).reset_index()
-            abm_p["Ach %"] = (abm_p["Disb"] / abm_p["Target"] * 100).round(1)
+            fig = px.bar(reg, x="Region", y=["Disb","Target"], barmode="group",
+                color_discrete_sequence=["#1FA89A","#D4936B"])
+            st.plotly_chart(plotly_theme(fig,260), use_container_width=True)
+            sec("Top & Bottom ABMs","🏆")
+            abm_p = perf_m.groupby("ABM Name").agg(Disb=("Actual Disb #","sum"),Target=("Target Disb #","sum")).reset_index()
+            abm_p["Ach %"] = (abm_p["Disb"]/abm_p["Target"]*100).round(1)
             st.write("**Top 5**")
-            st.dataframe(abm_p.nlargest(5, "Ach %"), use_container_width=True, hide_index=True)
+            st.dataframe(abm_p.nlargest(5,"Ach %"), use_container_width=True, hide_index=True)
             st.write("**Bottom 5**")
-            st.dataframe(abm_p.nsmallest(5, "Ach %"), use_container_width=True, hide_index=True)
+            st.dataframe(abm_p.nsmallest(5,"Ach %"), use_container_width=True, hide_index=True)
 
     with t3:
         if not prof_m.empty:
-            sec("Portfolio Health — Aggregate", "💼")
+            sec("Portfolio Health — Aggregate","💼")
             c1, c2 = st.columns(2)
             with c1:
-                kpi("Total AUM",  f"₹{prof_m['AUM (Rs Cr)'].sum():.1f} Cr", "Book")
-                kpi("Avg Bounce", f"{prof_m['AUM Bounce %'].mean():.1f}%",   "Avg")
-                kpi("Avg 30+DPD", f"{prof_m['30+ DPD %'].mean():.1f}%",      "Avg")
-                kpi("EMI Eff.",   f"{prof_m['EMI Collection Efficiency %'].mean():.1f}%", "Avg")
+                kpi("Total AUM",  f"₹{prof_m['AUM (Rs Cr)'].sum():.1f} Cr","Book")
+                kpi("Avg Bounce", f"{prof_m['AUM Bounce %'].mean():.1f}%","Avg")
+                kpi("Avg 30+DPD", f"{prof_m['30+ DPD %'].mean():.1f}%","Avg")
+                kpi("EMI Eff.",   f"{prof_m['EMI Collection Efficiency %'].mean():.1f}%","Avg")
             with c2:
-                kpi("Exit Rate",  f"{prof_m['Exit Rate %'].mean():.1f}%", "Avg")
-                kpi("Avg LTV",    f"{prof_m['Avg LTV %'].mean():.1f}%",   "Avg")
-                kpi("NPA %",      f"{prof_m['NPA %'].mean():.2f}%",        "Avg")
-                kpi("Port. IRR",  f"{prof_m['Portfolio IRR %'].mean():.2f}%", "Avg")
+                kpi("Exit Rate",  f"{prof_m['Exit Rate %'].mean():.1f}%","Avg")
+                kpi("Avg LTV",    f"{prof_m['Avg LTV %'].mean():.1f}%","Avg")
+                kpi("NPA %",      f"{prof_m['NPA %'].mean():.2f}%","Avg")
+                kpi("Port. IRR",  f"{prof_m['Portfolio IRR %'].mean():.2f}%","Avg")
         if not port_m.empty:
-            sec("Asset Mix", "🏷️")
-            am = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
+            sec("Asset Mix","🏷️")
+            am  = port_m.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
             fig = px.pie(am, names="Asset Type", values="POS (Rs Cr)", color_discrete_sequence=PALETTE)
-            st.plotly_chart(plotly_theme(fig, 270), use_container_width=True)
+            st.plotly_chart(plotly_theme(fig,270), use_container_width=True)
 
     with t4:
         if not prof_m.empty:
-            sec("Profitability KPIs", "💵")
+            sec("Profitability KPIs","💵")
             c1, c2 = st.columns(2)
             with c1:
-                kpi("AUM / RM",    f"₹{prof_m['AUM/RM (Rs Cr)'].mean():.2f} Cr",  "Avg")
-                kpi("Branch PAT",  f"{prof_m['PAT % (Before HO Allocation)'].mean():.2f}%", "Pre-HO")
+                kpi("AUM / RM",    f"₹{prof_m['AUM/RM (Rs Cr)'].mean():.2f} Cr","Avg")
+                kpi("Branch PAT",  f"{prof_m['PAT % (Before HO Allocation)'].mean():.2f}%","Pre-HO")
             with c2:
-                kpi("Disb / RM",   f"₹{prof_m['Disb/RM (Rs Cr)'].mean():.4f} Cr", "Avg")
-                kpi("Gross Margin",f"{prof_m['Gross Margin %'].mean():.2f}%",       "Avg")
-            sec("Path to 2% RoA", "🎯")
+                kpi("Disb / RM",   f"₹{prof_m['Disb/RM (Rs Cr)'].mean():.4f} Cr","Avg")
+                kpi("Gross Margin",f"{prof_m['Gross Margin %'].mean():.2f}%","Avg")
+            sec("Path to 2% RoA","🎯")
             avg_pat = prof_m["PAT % (Before HO Allocation)"].mean()
             avg_aum = prof_m["AUM/RM (Rs Cr)"].mean()
             avg_yld = prof_m["Yield %"].mean()
@@ -694,14 +703,14 @@ def leader_dashboard(user, data, prod_ov=None):
                 if avg_cst > 1.5: st.markdown(f"• **Cost lever**: ₹{avg_cst:.2f}Cr → trim 10% (+{avg_cst*0.1:.2f}pp)")
             else:
                 st.success(f"✅ Already at {avg_pat:.2f}% — above 2% RoA target.")
-            sec("Active Escalations Roll-up", "🚨")
+            sec("Active Escalations Roll-up","🚨")
             esc = build_escalation_table(data["perf"], user, prod_ov)
             if not esc.empty:
                 n_amber = len(esc[esc["Kind"]=="amber"])
                 n_red   = len(esc[esc["Kind"]=="red"])
-                c1, c2 = st.columns(2)
-                with c1: kpi("Amber Alerts", f"{n_amber}", "1st-2nd month zero")
-                with c2: kpi("Red Alerts",   f"{n_red}",   "3+ month zero")
+                c1, c2  = st.columns(2)
+                with c1: kpi("Amber Alerts",f"{n_amber}","1st-2nd month zero")
+                with c2: kpi("Red Alerts",  f"{n_red}",  "3+ month zero")
             else:
                 st.success("✅ No escalations active.")
 
@@ -710,8 +719,8 @@ def leader_dashboard(user, data, prod_ov=None):
 # CXO DASHBOARD
 # =============================================================================
 def cxo_dashboard(user, data):
-    sec("Product View", "🎛️")
-    pv = st.radio("Product", ["SRL", "STLAP", "Wheels"], horizontal=True,
+    sec("Product View","🎛️")
+    pv = st.radio("Product",["SRL","STLAP","Wheels"], horizontal=True,
                   label_visibility="collapsed", key="cxo_pv")
     st.caption(f"Currently viewing: **{pv}** {'(STLAP + Wheels combined)' if pv=='SRL' else ''}")
     leader_dashboard(user, data, prod_ov=pv)
@@ -721,31 +730,31 @@ def cxo_dashboard(user, data):
 # ADMIN DASHBOARD
 # =============================================================================
 def admin_dashboard(user, data):
-    sec("Admin Console", "⚙️")
-    t1, t2, t3 = st.tabs(["📤 Upload Data", "🔔 Notifications", "👤 Users"])
+    sec("Admin Console","⚙️")
+    t1, t2, t3 = st.tabs(["📤 Upload Data","🔔 Notifications","👤 Users"])
     with t1:
         up = st.file_uploader("Choose Excel file", type=["xlsx"])
         if up:
-            (DATA_DIR / "arkin_dummy_data.xlsx").write_bytes(up.getbuffer())
+            (DATA_DIR/"arkin_dummy_data.xlsx").write_bytes(up.getbuffer())
             st.cache_data.clear()
             st.success("✅ Uploaded and cache cleared.")
         if DATA_FILE.exists():
-            sz = DATA_FILE.stat().st_size / 1024
+            sz = DATA_FILE.stat().st_size/1024
             mt = datetime.fromtimestamp(DATA_FILE.stat().st_mtime)
             st.info(f"📁 {DATA_FILE.name} · {sz:.1f} KB · {mt:%d-%b-%Y %H:%M}")
     with t2:
         notif = data["notif"]
-        cols = ["Month Label", "RM Name", "Product", "Notification 1"]
+        cols  = ["Month Label","RM Name","Product","Notification 1"]
         cols_exist = [c for c in cols if c in notif.columns]
         st.write(f"Total notifications: **{len(notif)}**")
         st.dataframe(notif[cols_exist].head(10), use_container_width=True, hide_index=True)
         st.button("🚀 Dispatch All (mock)", use_container_width=True)
     with t3:
         org = data["org"]
-        st.dataframe(org.groupby(["Level", "Product"]).size().reset_index(name="Count"),
+        st.dataframe(org.groupby(["Level","Product"]).size().reset_index(name="Count"),
                      use_container_width=True, hide_index=True)
-        lvl = st.selectbox("Filter", ["All"] + sorted(org["Level"].unique().tolist()))
-        st.dataframe((org if lvl == "All" else org[org["Level"] == lvl]).head(50),
+        lvl = st.selectbox("Filter",["All"]+sorted(org["Level"].unique().tolist()))
+        st.dataframe((org if lvl=="All" else org[org["Level"]==lvl]).head(50),
                      use_container_width=True, hide_index=True)
 
 
@@ -761,8 +770,7 @@ def login_screen():
         <div class="login-headline">Get ahead,<br><span class="login-accent">every day.</span></div>
         <div class="login-sub">Your sales intelligence companion — numbers, nudges, and next steps crafted for the way you actually work.</div>
       </div>
-    </div>
-    """)
+    </div>""")
     with st.form("arkin_login"):
         st.text_input("Employee ID", placeholder="e.g. rm.3001", key="li_user")
         st.text_input("Password", placeholder="Demo: arkin@2026", type="password", key="li_pass")
@@ -777,8 +785,7 @@ def login_screen():
     <div class="login-footer">
       <span class="pw">Powered by Arka Fincap</span>
       <span class="grp">A Kirloskar Group company</span>
-    </div>
-    """)
+    </div>""")
     with st.expander("🧪 Demo credentials"):
         st.markdown(f"""
 **Password:** `{DEMO_PW}`
@@ -800,14 +807,6 @@ def login_screen():
 # MAIN
 # =============================================================================
 def main():
-    fix_whitespace()
-
-    # ── Logout: query param set by Sign out button JS, checked before render ─
-    if st.query_params.get("logout") == "1":
-        st.query_params.clear()
-        st.session_state.clear()
-        st.rerun()
-
     inject_css()
     data = load_data()
 
@@ -818,12 +817,14 @@ def main():
     user = st.session_state["user"]
 
     st.markdown('<div class="page">', unsafe_allow_html=True)
+
+    # brand_bar contains a real st.button for Sign out — 100% reliable on Streamlit Cloud
     brand_bar(user)
 
     level = user["level"]
     if   level == "RM":           rm_dashboard(user, data)
     elif level == "ABM":          leader_dashboard(user, data)
-    elif level in ("RBM", "ZH"): leader_dashboard(user, data)
+    elif level in ("RBM","ZH"):   leader_dashboard(user, data)
     elif level == "CXO":          cxo_dashboard(user, data)
     elif level == "Admin":        admin_dashboard(user, data)
 
