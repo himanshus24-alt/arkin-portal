@@ -1,14 +1,12 @@
 """
 Arka KinetiQ — Intelligence in Motion
 ======================================
-Mobile-first sales intelligence portal for Arka Fincap.
+Mobile-first sales intelligence portal for Arka Fincap's SRL business
+(Secured Retail Lending = STLAP + Wheels).
 
-Brand palette:
-  Deep Teal     #0F3D3E   (primary)
-  Vibrant Teal  #1FA89A   (secondary)
-  Copper        #D4936B   (accent)
-  Cream         #F6F8F8   (background)
-  Pure White    #FFFFFF   (surfaces)
+Hierarchy & product view rules:
+  - RM, ABM, RBM, ZH, BH  → product-specific (STLAP OR Wheels)
+  - CXO / Central / Admin  → SRL (consolidated) with STLAP/Wheels toggle
 
 Run:
   streamlit run arkin_app.py --server.port=8501 --server.address=0.0.0.0
@@ -77,66 +75,81 @@ st.markdown("""
         color: var(--ink-900);
     }
 
-    /* ── Inner page padding ──────────────────────────────────── */
-    .page {
-        padding: 16px 16px 80px 16px;
+    .page {padding: 14px 14px 80px 14px;}
+
+    /* ── Logo wordmark (used in both login + brand-bar) ──────── */
+    .arka-mark {
+        font-family: 'Sora', sans-serif;
+        font-weight: 800;
+        letter-spacing: 2px;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+    .arka-mark .arka {color: var(--teal-deep);}
+    .arka-mark .kq {
+        color: var(--copper);
+        font-weight: 600;
+        font-style: italic;
+        letter-spacing: 0.5px;
     }
 
     /* ── Brand bar (dashboards) ──────────────────────────────── */
     .brand-bar {
         background: var(--teal-deep);
         color: var(--white);
-        padding: 16px 18px 18px;
-        border-radius: 16px;
-        margin-bottom: 14px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        margin-bottom: 12px;
         position: relative;
         overflow: hidden;
     }
     .brand-bar::before {
         content: "";
         position: absolute;
-        top: -30px; right: -30px;
-        width: 100px; height: 100px;
-        background: var(--teal-vibrant);
+        top: -25px; right: -25px;
+        width: 80px; height: 80px;
+        background: var(--copper);
         clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
         opacity: 0.35;
-        transform: rotate(15deg);
-    }
-    .brand-bar::after {
-        content: "";
-        position: absolute;
-        bottom: -20px; left: -20px;
-        width: 60px; height: 60px;
-        background: var(--copper);
-        clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
-        opacity: 0.4;
     }
     .brand-bar .brand-row {
-        display: flex; align-items: baseline; gap: 6px;
+        display: flex; align-items: baseline; gap: 4px;
         position: relative; z-index: 2;
     }
     .brand-bar .b1 {
         font-family: 'Sora', sans-serif;
-        font-weight: 800; font-size: 18px;
-        letter-spacing: 1.5px; color: var(--white);
+        font-weight: 800; font-size: 16px;
+        letter-spacing: 1.8px; color: var(--white);
     }
     .brand-bar .b2 {
         font-family: 'Sora', sans-serif;
-        font-weight: 500; font-size: 16px;
+        font-weight: 500; font-size: 14px;
         color: var(--copper); font-style: italic;
         letter-spacing: 0.2px;
     }
     .brand-bar .b-meta {
         font-family: 'Inter', sans-serif;
-        font-size: 11px; opacity: 0.78;
-        margin-top: 4px; position: relative; z-index: 2;
+        font-size: 11px; opacity: 0.85;
+        margin-top: 6px; position: relative; z-index: 2;
+        line-height: 1.5;
+    }
+    .brand-bar .chip {
+        background: rgba(255,255,255,0.15) !important;
+        color: var(--white) !important;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        margin-left: 4px;
     }
 
     /* ── KPI tiles ───────────────────────────────────────────── */
     .kpi-card {
         background: var(--white);
-        border-radius: 14px;
-        padding: 14px;
+        border-radius: 12px;
+        padding: 12px 13px;
         border: 1px solid var(--line);
         box-shadow: var(--shadow-sm);
         margin-bottom: 8px;
@@ -150,13 +163,13 @@ st.markdown("""
     }
     .kpi-value {
         font-family: 'Sora', sans-serif;
-        font-size: 24px; font-weight: 700;
+        font-size: 22px; font-weight: 700;
         color: var(--ink-900);
         margin: 4px 0; line-height: 1.1;
     }
     .kpi-sub {font-size: 11px; color: var(--ink-500); font-weight: 500;}
-    .kpi-up {color: var(--teal-vibrant); font-size: 13px;}
-    .kpi-down {color: #C8553D; font-size: 13px;}
+    .kpi-up {color: var(--teal-vibrant); font-size: 12px;}
+    .kpi-down {color: #C8553D; font-size: 12px;}
 
     /* ── Nudge / Announce / Action cards ─────────────────────── */
     .nudge-card {
@@ -187,24 +200,17 @@ st.markdown("""
         color: #7A1F0E;
     }
 
-    /* ── Status chips ────────────────────────────────────────── */
-    .chip {
-        display: inline-block; padding: 2px 8px;
-        border-radius: 10px; font-size: 10px;
-        font-weight: 600; letter-spacing: 0.3px;
-    }
-    .chip-amber {background: var(--copper-soft); color: #6B3F1F;}
-    .chip-red   {background: #FDECEA; color: #7A1F0E;}
-    .chip-green {background: var(--teal-soft); color: var(--teal-deep);}
-    .chip-stlap {background: var(--teal-soft); color: var(--teal-deep);}
-    .chip-wheels{background: var(--copper-soft); color: #6B3F1F;}
+    /* ── Chips ───────────────────────────────────────────────── */
+    .chip-amber {background: var(--copper-soft); color: #6B3F1F; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600;}
+    .chip-red   {background: #FDECEA; color: #7A1F0E; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600;}
+    .chip-green {background: var(--teal-soft); color: var(--teal-deep); padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600;}
 
     /* ── Section title ───────────────────────────────────────── */
     .section-title {
         font-family: 'Sora', sans-serif;
-        font-size: 14px; font-weight: 700;
+        font-size: 13px; font-weight: 700;
         color: var(--ink-900);
-        margin: 18px 0 10px 0;
+        margin: 14px 0 8px 0;
         letter-spacing: 0.2px;
     }
     .section-title .accent-dot {
@@ -213,14 +219,14 @@ st.markdown("""
         margin-right: 8px; vertical-align: middle;
     }
 
-    /* ── Buttons (primary teal) ──────────────────────────────── */
+    /* ── Buttons ─────────────────────────────────────────────── */
     .stButton button {
         width: 100%;
         background: var(--teal-deep) !important;
         color: var(--white) !important;
         border: none !important;
         border-radius: 10px !important;
-        padding: 12px 16px !important;
+        padding: 11px 16px !important;
         font-family: 'Sora', sans-serif !important;
         font-weight: 600 !important;
         font-size: 14px !important;
@@ -248,7 +254,7 @@ st.markdown("""
     }
     .stTextInput label, .stSelectbox label {
         font-family: 'Inter', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
         color: var(--ink-700) !important;
         text-transform: uppercase;
@@ -258,33 +264,74 @@ st.markdown("""
     /* ── DataFrames ──────────────────────────────────────────── */
     .stDataFrame {font-size: 12px;}
 
-    /* ── Radio buttons (CXO product toggle) ──────────────────── */
-    .stRadio > div {gap: 8px;}
+    /* ── Tabs ────────────────────────────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+        background: var(--white);
+        border-radius: 10px;
+        padding: 4px;
+        border: 1px solid var(--line);
+    }
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Sora', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        color: var(--ink-500) !important;
+        padding: 8px 6px !important;
+        border-radius: 8px !important;
+        flex: 1;
+        text-align: center;
+        background: transparent !important;
+        border: none !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background: var(--teal-deep) !important;
+        color: var(--white) !important;
+        box-shadow: var(--shadow-sm);
+    }
+    .stTabs [data-baseweb="tab-panel"] {padding-top: 12px;}
+    .stTabs [data-baseweb="tab-highlight"] {display: none;}
+
+    /* ── Radio (SRL sub-toggle) ──────────────────────────────── */
+    .stRadio > div {
+        gap: 4px !important;
+        background: var(--white);
+        padding: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        display: flex !important;
+    }
+    .stRadio > div > label {
+        flex: 1;
+        text-align: center;
+        padding: 6px 0 !important;
+        font-family: 'Sora', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    .stRadio input[type="radio"]:checked + div {
+        background: var(--teal-vibrant);
+        color: var(--white);
+    }
     .stRadio label {font-family: 'Inter', sans-serif; font-size: 13px;}
 
-    /* ── Tabs (admin) ────────────────────────────────────────── */
-    .stTabs [data-baseweb="tab-list"] {gap: 4px;}
-    .stTabs [data-baseweb="tab"] {
-        font-family: 'Inter', sans-serif;
-        font-size: 13px; font-weight: 600;
-    }
-
-    /* ── LOGIN PAGE ───────────────────────────────────────────── */
+    /* ── LOGIN PAGE — COMPACT, NO-SCROLL ──────────────────────── */
     .login-page {
         min-height: 100vh;
         background: var(--cream);
         position: relative;
-        padding: 28px 20px 24px;
+        padding: 22px 18px 18px;
     }
 
-    /* Corner triangle decorations (echoes brand reference) */
+    /* ONLY top-left & bottom-right triangles per feedback */
     .login-page::before {
         content: "";
         position: absolute;
         top: 0; left: 0;
-        width: 140px; height: 140px;
-        background:
-          linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-deep) 50%, transparent 50%);
+        width: 110px; height: 110px;
+        background: var(--teal-deep);
         opacity: 0.95;
         clip-path: polygon(0 0, 100% 0, 0 100%);
     }
@@ -292,101 +339,51 @@ st.markdown("""
         content: "";
         position: absolute;
         bottom: 0; right: 0;
-        width: 160px; height: 160px;
-        background:
-          linear-gradient(315deg, var(--copper) 0%, var(--copper) 50%, transparent 50%);
+        width: 130px; height: 130px;
+        background: var(--copper);
         opacity: 0.85;
         clip-path: polygon(100% 100%, 100% 0, 0 100%);
-    }
-    /* Mid-scattered triangles */
-    .tri-1, .tri-2, .tri-3 {
-        position: absolute;
-        z-index: 1;
-    }
-    .tri-1 {
-        top: 90px; right: 30px;
-        width: 56px; height: 56px;
-        background: var(--teal-vibrant);
-        opacity: 0.85;
-        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    }
-    .tri-2 {
-        top: 220px; left: 14px;
-        width: 38px; height: 38px;
-        background: var(--copper);
-        opacity: 0.7;
-        clip-path: polygon(0 0, 100% 50%, 0 100%);
-    }
-    .tri-3 {
-        bottom: 200px; left: 40px;
-        width: 50px; height: 50px;
-        background: var(--teal-vibrant);
-        opacity: 0.45;
-        clip-path: polygon(100% 0, 100% 100%, 0 100%);
     }
 
     /* Logo block */
     .logo-block {
         position: relative; z-index: 5;
-        text-align: left;
-        padding-top: 60px;
-        padding-left: 4px;
-    }
-    .logo-mark {
-        display: inline-flex; gap: 3px;
-        margin-bottom: 14px;
-        align-items: flex-end;
-    }
-    .logo-mark .lt-1, .logo-mark .lt-2, .logo-mark .lt-3 {
-        width: 0; height: 0;
-    }
-    .logo-mark .lt-1 {
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 14px solid var(--teal-deep);
-    }
-    .logo-mark .lt-2 {
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 18px solid var(--teal-vibrant);
-    }
-    .logo-mark .lt-3 {
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 22px solid var(--copper);
+        padding-top: 36px;
+        padding-left: 2px;
     }
     .logo-wordmark {
         font-family: 'Sora', sans-serif;
-        font-size: 28px; font-weight: 800;
+        font-size: 30px; font-weight: 800;
         color: var(--teal-deep);
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         line-height: 1;
     }
     .logo-wordmark .kinetiq {
         color: var(--copper);
         font-weight: 600;
         font-style: italic;
-        margin-left: 2px;
+        margin-left: 4px;
+        letter-spacing: 0.5px;
     }
     .logo-tag {
         font-family: 'Inter', sans-serif;
-        font-size: 11px; font-weight: 500;
+        font-size: 10px; font-weight: 500;
         color: var(--ink-500);
-        letter-spacing: 1.5px;
+        letter-spacing: 1.8px;
         text-transform: uppercase;
         margin-top: 6px;
     }
 
-    /* Hero headline (the bilingual tagline) */
+    /* Hero headline */
     .hero-headline {
         position: relative; z-index: 5;
-        margin-top: 48px;
+        margin-top: 24px;
         font-family: 'Sora', sans-serif;
-        font-size: 34px;
+        font-size: 28px;
         font-weight: 700;
         line-height: 1.15;
         color: var(--teal-deep);
-        letter-spacing: -0.5px;
+        letter-spacing: -0.4px;
     }
     .hero-headline .accent {
         color: var(--copper);
@@ -395,51 +392,37 @@ st.markdown("""
     .hero-sub {
         position: relative; z-index: 5;
         font-family: 'Inter', sans-serif;
-        font-size: 14px;
+        font-size: 13px;
         color: var(--ink-500);
-        margin-top: 12px;
+        margin-top: 8px;
         line-height: 1.5;
         max-width: 320px;
     }
 
-    /* Login form card */
+    /* Login form: pulled up, compact */
     .login-card-wrapper {
         position: relative; z-index: 5;
-        margin-top: 36px;
-    }
-
-    /* Form field rendering inside Streamlit */
-    .login-page .stForm {
-        background: transparent;
-        border: none;
-        padding: 0;
+        margin-top: 22px;
     }
     .login-page [data-testid="stForm"] {
         background: var(--white);
-        border-radius: 18px;
-        padding: 22px 18px 20px;
+        border-radius: 16px;
+        padding: 18px 16px 16px;
         box-shadow: var(--shadow-lg);
         border: 1px solid var(--line);
     }
 
     .login-footer {
         position: relative; z-index: 5;
-        margin-top: 28px;
+        margin-top: 14px;
         text-align: center;
         font-family: 'Inter', sans-serif;
         font-size: 11px;
         color: var(--ink-500);
-        line-height: 1.6;
+        line-height: 1.5;
     }
-    .login-footer .powered {
-        font-weight: 600;
-        color: var(--ink-700);
-    }
-    .login-footer .group {
-        opacity: 0.7;
-        margin-top: 2px;
-        display: block;
-    }
+    .login-footer .powered {font-weight: 600; color: var(--ink-700);}
+    .login-footer .group {opacity: 0.7; margin-top: 2px; display: block;}
 
     /* ── Sidebar ─────────────────────────────────────────────── */
     [data-testid="stSidebar"] {
@@ -451,11 +434,18 @@ st.markdown("""
         color: var(--ink-900);
     }
 
-    /* ── Expander styling ────────────────────────────────────── */
+    /* Expander */
     .streamlit-expanderHeader, [data-testid="stExpander"] summary {
         font-family: 'Inter', sans-serif !important;
         font-weight: 600 !important;
         color: var(--teal-deep) !important;
+    }
+
+    /* Captions */
+    .stCaption, [data-testid="stCaptionContainer"] {
+        font-family: 'Inter', sans-serif !important;
+        color: var(--ink-500) !important;
+        font-size: 12px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -483,10 +473,7 @@ def load_data():
 # AUTH
 # =============================================================================
 DEMO_PASSWORD = "arkin@2026"
-
-def hash_pw(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
-
+def hash_pw(pw: str) -> str: return hashlib.sha256(pw.encode()).hexdigest()
 DEMO_PW_HASH = hash_pw(DEMO_PASSWORD)
 
 
@@ -502,21 +489,18 @@ def build_user_directory():
             "id": int(r["ID"]), "product": r["Product"],
             "zone": r["Zone"], "region": r["Region"], "pw_hash": DEMO_PW_HASH,
         }
-
     for _, r in org[org["Level"] == "ABM"].iterrows():
         users[f"abm.{r['ID']}"] = {
-            "name": r["Name"], "role": "Team Leader (ABM)", "level": "ABM",
+            "name": r["Name"], "role": "Area Business Manager", "level": "ABM",
             "id": int(r["ID"]), "product": r["Product"],
             "zone": r["Zone"], "region": r["Region"], "pw_hash": DEMO_PW_HASH,
         }
-
     for _, r in org[org["Level"] == "RBM"].iterrows():
         users[f"rbm.{r['ID']}"] = {
             "name": r["Name"], "role": "Regional Business Manager", "level": "RBM",
             "id": int(r["ID"]), "product": r["Product"],
             "zone": r["Zone"], "region": r["Region"], "pw_hash": DEMO_PW_HASH,
         }
-
     for _, r in org[org["Level"] == "ZH"].iterrows():
         users[f"zh.{r['ID']}"] = {
             "name": r["Name"], "role": "Zonal Head", "level": "ZH",
@@ -524,19 +508,20 @@ def build_user_directory():
             "zone": r["Zone"], "region": "All", "pw_hash": DEMO_PW_HASH,
         }
 
+    # CXO / Central / Admin — see SRL
     users["cxo"] = {
         "name": "Chief Business Officer", "role": "CXO", "level": "CXO",
-        "id": "CXO001", "product": "Both", "zone": "All", "region": "All",
+        "id": "CXO001", "product": "SRL", "zone": "All", "region": "All",
         "pw_hash": DEMO_PW_HASH,
     }
     users["central"] = {
         "name": "Central Analytics Lead", "role": "Central Team", "level": "CXO",
-        "id": "CEN001", "product": "Both", "zone": "All", "region": "All",
+        "id": "CEN001", "product": "SRL", "zone": "All", "region": "All",
         "pw_hash": DEMO_PW_HASH,
     }
     users["admin"] = {
         "name": "System Administrator", "role": "Admin", "level": "Admin",
-        "id": "ADM001", "product": "Both", "zone": "All", "region": "All",
+        "id": "ADM001", "product": "SRL", "zone": "All", "region": "All",
         "pw_hash": DEMO_PW_HASH,
     }
     return users
@@ -553,15 +538,22 @@ def authenticate(username, password):
 # =============================================================================
 # RBAC + PRODUCT SCOPING
 # =============================================================================
-def scope_data(df, user):
+def scope_data(df, user, product_override=None):
+    """Filter df by user's org level and product.
+    product_override: for CXO/Central — pass 'STLAP', 'Wheels', or 'SRL'
+                      to switch the view in real time.
+    """
     if df is None or df.empty:
         return df
     level = user["level"]
-    prod = user["product"]
+    prod = product_override if product_override else user["product"]
 
-    if prod != "Both" and "Product" in df.columns:
+    # Product filter: SRL means both, anything else is single-product
+    if prod in ("STLAP", "Wheels") and "Product" in df.columns:
         df = df[df["Product"] == prod]
+    # If prod == "SRL", don't filter — show both STLAP + Wheels
 
+    # Org-level filter
     if level in ("CXO", "Admin"):
         return df
     if level == "ZH" and "ZH ID" in df.columns:
@@ -579,23 +571,17 @@ def scope_data(df, user):
 # =============================================================================
 # UI HELPERS
 # =============================================================================
-def brand_bar(user):
-    """Branded dashboard header with the same Arka KinetiQ identity."""
-    prod_chip = ""
-    if user["product"] == "STLAP":
-        prod_chip = '<span class="chip chip-stlap" style="background:rgba(31,168,154,0.25);color:#fff;">STLAP</span>'
-    elif user["product"] == "Wheels":
-        prod_chip = '<span class="chip chip-wheels" style="background:rgba(212,147,107,0.25);color:#fff;">WHEELS</span>'
-    elif user["product"] == "Both":
-        prod_chip = ('<span class="chip" style="background:rgba(31,168,154,0.25);color:#fff;">STLAP</span> '
-                     '<span class="chip" style="background:rgba(212,147,107,0.25);color:#fff;">WHEELS</span>')
+def brand_bar(user, current_product=None):
+    """Top branded bar with logo + user info + product chip."""
+    display_prod = current_product if current_product else user["product"]
+    prod_chip = f'<span class="chip">{display_prod}</span>'
 
     st.markdown(f"""
     <div class="brand-bar">
       <div class="brand-row">
         <span class="b1">ARKA</span><span class="b2">KinetiQ</span>
       </div>
-      <div class="b-meta">{user['name']} · {user['role']} · {user.get('zone','—')} &nbsp; {prod_chip}</div>
+      <div class="b-meta">{user['name']} · {user['role']} · {user.get('zone','—')} {prod_chip}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -627,24 +613,21 @@ def mailto_link(to_email, subject, body, cc_list=None):
 
 
 def status_chip(text, kind="green"):
-    return f'<span class="chip chip-{kind}">{text}</span>'
+    return f'<span class="chip-{kind}">{text}</span>'
 
 
 # =============================================================================
-# PLOTLY THEMING — match the brand
+# PLOTLY THEMING
 # =============================================================================
-ARKA_PLOTLY_COLORS = ["#0F3D3E", "#1FA89A", "#D4936B", "#5BAFA8", "#E6B998", "#2D5A5B"]
+ARKA_PALETTE = ["#0F3D3E", "#1FA89A", "#D4936B", "#5BAFA8", "#E6B998", "#2D5A5B"]
 
 
 def apply_plotly_theme(fig, height=240):
     fig.update_layout(
-        height=height,
-        margin=dict(l=10, r=10, t=10, b=10),
+        height=height, margin=dict(l=10, r=10, t=10, b=10),
         font=dict(family="Inter, sans-serif", size=11, color="#0F3D3E"),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        legend=dict(orientation="h", y=-0.18,
-                    font=dict(size=10, color="#0F3D3E")),
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        legend=dict(orientation="h", y=-0.18, font=dict(size=10, color="#0F3D3E")),
         xaxis=dict(showgrid=False, color="#6B8788"),
         yaxis=dict(gridcolor="#E5EAEA", color="#6B8788"),
     )
@@ -652,7 +635,7 @@ def apply_plotly_theme(fig, height=240):
 
 
 # =============================================================================
-# DASHBOARDS
+# SALES MANAGER (RM) — TABBED
 # =============================================================================
 def render_sales_manager(user, data):
     perf  = scope_data(data["perf"], user)
@@ -665,310 +648,367 @@ def render_sales_manager(user, data):
         return
     row = perf.iloc[0]
 
-    section("AI Nudges for You", "🤖")
-    if not notif.empty:
-        nrow = notif.iloc[0]
-        for i in range(1, 6):
-            n = nrow.get(f"Notification {i}", "")
-            if pd.notna(n) and str(n).strip():
-                st.markdown(f'<div class="nudge-card">💡 {n}</div>', unsafe_allow_html=True)
+    tab_focus, tab_perf, tab_port = st.tabs(["🎯 Focus", "📊 Performance", "💼 Portfolio"])
 
-    section("Key Announcements", "📢")
-    st.markdown('<div class="announce-card">📌 Quarterly target review on 30th — submit branch numbers by EOD Friday.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="announce-card">🎯 New TAT SLA: Login → Sanction within 5 working days from June.</div>', unsafe_allow_html=True)
+    # ─── FOCUS TAB ────────────────────────────────────────────────────────
+    with tab_focus:
+        section("AI Nudges for You", "🤖")
+        if not notif.empty:
+            nrow = notif.iloc[0]
+            for i in range(1, 6):
+                n = nrow.get(f"Notification {i}", "")
+                if pd.notna(n) and str(n).strip():
+                    st.markdown(f'<div class="nudge-card">💡 {n}</div>', unsafe_allow_html=True)
 
-    section("Key Actionables Today", "✅")
-    gap_disb = max(0, int(row["Target Disb #"] - row["Actual Disb #"]))
-    if gap_disb > 0:
-        st.markdown(f'<div class="action-card">🔥 Close {gap_disb} more disbursements to hit monthly target.</div>', unsafe_allow_html=True)
-    if row["Actual PF %"] < row["Target PF %"]:
-        st.markdown(f'<div class="action-card">💰 PF% at {row["Actual PF %"]:.2f}% vs target {row["Target PF %"]:.2f}% — push fee collection.</div>', unsafe_allow_html=True)
+        section("Key Announcements", "📢")
+        st.markdown('<div class="announce-card">📌 Quarterly target review on 30th — submit branch numbers by EOD Friday.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="announce-card">🎯 New TAT SLA: Login → Sanction within 5 working days from June.</div>', unsafe_allow_html=True)
 
-    section("Performance Imperatives — Funnel", "📊")
-    c = st.columns(3)
-    with c[0]: kpi_tile("Logins", f"{int(row['Actual Login #'])}", f"Tgt {int(row['Target Login #'])}")
-    with c[1]: kpi_tile("Sanctions", f"{int(row['Actual Sanction #'])}", f"Tgt {int(row['Target Sanction #'])}")
-    with c[2]: kpi_tile("Disb", f"{int(row['Actual Disb #'])}", f"Tgt {int(row['Target Disb #'])}")
+        section("Key Actionables Today", "✅")
+        gap_disb = max(0, int(row["Target Disb #"] - row["Actual Disb #"]))
+        if gap_disb > 0:
+            st.markdown(f'<div class="action-card">🔥 Close {gap_disb} more disbursements to hit monthly target.</div>', unsafe_allow_html=True)
+        if row["Actual PF %"] < row["Target PF %"]:
+            st.markdown(f'<div class="action-card">💰 PF% at {row["Actual PF %"]:.2f}% vs target {row["Target PF %"]:.2f}% — push fee collection.</div>', unsafe_allow_html=True)
+        if row["Actual Conversion %"] < row["Target Conversion %"]:
+            st.markdown(f'<div class="action-card">🎯 Conversion {row["Actual Conversion %"]:.1f}% below target {row["Target Conversion %"]:.1f}% — reduce TAT.</div>', unsafe_allow_html=True)
 
-    fig = go.Figure(go.Funnel(
-        y=["Logins", "Sanctions", "Disbursements"],
-        x=[row["Actual Login #"], row["Actual Sanction #"], row["Actual Disb #"]],
-        marker={"color": ["#1FA89A", "#0F3D3E", "#D4936B"]},
-        textposition="inside", textinfo="value+percent initial",
-    ))
-    apply_plotly_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
+    # ─── PERFORMANCE TAB ──────────────────────────────────────────────────
+    with tab_perf:
+        section("Funnel — Login → Sanction → Disb", "📊")
+        c = st.columns(3)
+        with c[0]: kpi_tile("Logins", f"{int(row['Actual Login #'])}", f"Tgt {int(row['Target Login #'])}")
+        with c[1]: kpi_tile("Sanctions", f"{int(row['Actual Sanction #'])}", f"Tgt {int(row['Target Sanction #'])}")
+        with c[2]: kpi_tile("Disb", f"{int(row['Actual Disb #'])}", f"Tgt {int(row['Target Disb #'])}")
 
-    section("Conversion & Mix", "🎯")
-    c1, c2 = st.columns(2)
-    with c1:
-        conv_gap = row["Actual Conversion %"] - row["Target Conversion %"]
-        kpi_tile("Conversion", f"{row['Actual Conversion %']:.1f}%",
-                 f"Tgt {row['Target Conversion %']:.1f}%", trend=conv_gap)
-        kpi_tile("IRR Mix", f"{row['IRR Mix %']:.2f}%", "Portfolio yield")
-    with c2:
-        kpi_tile("LTV", f"{row['LTV %']:.1f}%", "Loan to Value")
-        kpi_tile("Avg Ticket", f"₹{row['Avg Ticket Size (Rs L)']:.1f} L", "Per case")
-
-    section("Disbursement Trend (Last 3 + Current)", "📈")
-    trend_df = pd.DataFrame({
-        "Month": ["M-3", "M-2", "M-1", "Current"],
-        "Disb #": [row["M-3 Disb #"], row["M-2 Disb #"], row["M-1 Disb #"], row["Actual Disb #"]],
-        "Target": [row["Target Disb #"]] * 4,
-    })
-    fig = go.Figure()
-    fig.add_bar(x=trend_df["Month"], y=trend_df["Disb #"], name="Actual", marker_color="#1FA89A")
-    fig.add_scatter(x=trend_df["Month"], y=trend_df["Target"], name="Target",
-                    mode="lines+markers", line=dict(color="#D4936B", dash="dash", width=2),
-                    marker=dict(size=8))
-    apply_plotly_theme(fig)
-    st.plotly_chart(fig, use_container_width=True)
-
-    section("Achievement & Productivity", "⚡")
-    c1, c2 = st.columns(2)
-    with c1:
-        kpi_tile("CM Achievement", f"{row['CM Achievement %']:.1f}%", "Of monthly target")
-        kpi_tile("PF %", f"{row['Actual PF %']:.2f}%", f"Tgt {row['Target PF %']:.2f}%")
-    with c2:
-        kpi_tile("Cross-sell", f"{row['Cross Sell %']:.1f}%", "Insurance + bundle")
-        kpi_tile("Productivity", f"{row['Productivity (Disb/RM)']:.1f}", "Disb / RM / month")
-
-    fee_income = (row["Actual Disb Amount (Rs Cr)"] * row["Actual PF %"] / 100 +
-                  row["Actual Disb Amount (Rs Cr)"] * row["Actual Insurance %"] / 100)
-    kpi_tile("Fee Income (PF + Ins)", f"₹{fee_income:.3f} Cr", "This month")
-
-    section("Portfolio Imperatives", "💼")
-    if not prof.empty:
-        prow = prof.iloc[0]
-        c1, c2 = st.columns(2)
-        with c1:
-            kpi_tile("AUM", f"₹{prow['AUM (Rs Cr)']:.1f} Cr", "Customers acquired")
-            kpi_tile("Bounce %", f"{prow['AUM Bounce %']:.1f}%", "Portfolio")
-            kpi_tile("30+ DPD", f"{prow['30+ DPD %']:.1f}%", "Delinquency")
-            kpi_tile("EMI Eff.", f"{prow['EMI Collection Efficiency %']:.1f}%", "Collection")
-        with c2:
-            kpi_tile("Exit Rate", f"{prow['Exit Rate %']:.1f}%", "Customers leaving")
-            kpi_tile("Avg LTV", f"{prow['Avg LTV %']:.1f}%", "Portfolio")
-            kpi_tile("NPA %", f"{prow['NPA %']:.2f}%", "Non-performing")
-            kpi_tile("Portfolio IRR", f"{prow['Portfolio IRR %']:.2f}%", "Yield")
-
-    if not port.empty:
-        section("Asset Type Mix", "🏷️")
-        asset_mix = port.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
-        fig = px.pie(asset_mix, names="Asset Type", values="POS (Rs Cr)",
-                     color_discrete_sequence=ARKA_PLOTLY_COLORS)
-        apply_plotly_theme(fig, height=270)
+        fig = go.Figure(go.Funnel(
+            y=["Logins", "Sanctions", "Disbursements"],
+            x=[row["Actual Login #"], row["Actual Sanction #"], row["Actual Disb #"]],
+            marker={"color": ["#1FA89A", "#0F3D3E", "#D4936B"]},
+            textposition="inside", textinfo="value+percent initial",
+        ))
+        apply_plotly_theme(fig)
         st.plotly_chart(fig, use_container_width=True)
 
+        section("Conversion & Mix", "🎯")
+        c1, c2 = st.columns(2)
+        with c1:
+            conv_gap = row["Actual Conversion %"] - row["Target Conversion %"]
+            kpi_tile("Conversion", f"{row['Actual Conversion %']:.1f}%",
+                     f"Tgt {row['Target Conversion %']:.1f}%", trend=conv_gap)
+            kpi_tile("IRR Mix", f"{row['IRR Mix %']:.2f}%", "Portfolio yield")
+        with c2:
+            kpi_tile("LTV", f"{row['LTV %']:.1f}%", "Loan to Value")
+            kpi_tile("Avg Ticket", f"₹{row['Avg Ticket Size (Rs L)']:.1f} L", "Per case")
 
-def render_team_leader(user, data):
-    perf = scope_data(data["perf"], user)
-    prof = scope_data(data["prof"], user)
-    port = scope_data(data["port"], user)
+        section("Disbursement Trend", "📈")
+        trend_df = pd.DataFrame({
+            "Month": ["M-3", "M-2", "M-1", "Current"],
+            "Disb #": [row["M-3 Disb #"], row["M-2 Disb #"], row["M-1 Disb #"], row["Actual Disb #"]],
+            "Target": [row["Target Disb #"]] * 4,
+        })
+        fig = go.Figure()
+        fig.add_bar(x=trend_df["Month"], y=trend_df["Disb #"], name="Actual", marker_color="#1FA89A")
+        fig.add_scatter(x=trend_df["Month"], y=trend_df["Target"], name="Target",
+                        mode="lines+markers", line=dict(color="#D4936B", dash="dash", width=2),
+                        marker=dict(size=8))
+        apply_plotly_theme(fig)
+        st.plotly_chart(fig, use_container_width=True)
+
+        section("Achievement & Productivity", "⚡")
+        c1, c2 = st.columns(2)
+        with c1:
+            kpi_tile("CM Achievement", f"{row['CM Achievement %']:.1f}%", "Of monthly target")
+            kpi_tile("PF %", f"{row['Actual PF %']:.2f}%", f"Tgt {row['Target PF %']:.2f}%")
+        with c2:
+            kpi_tile("Cross-sell", f"{row['Cross Sell %']:.1f}%", "Insurance + bundle")
+            kpi_tile("Productivity", f"{row['Productivity (Disb/RM)']:.1f}", "Disb/RM/month")
+
+        fee_income = (row["Actual Disb Amount (Rs Cr)"] * row["Actual PF %"] / 100 +
+                      row["Actual Disb Amount (Rs Cr)"] * row["Actual Insurance %"] / 100)
+        kpi_tile("Fee Income (PF + Ins)", f"₹{fee_income:.3f} Cr", "This month")
+
+    # ─── PORTFOLIO TAB ────────────────────────────────────────────────────
+    with tab_port:
+        if not prof.empty:
+            prow = prof.iloc[0]
+            section("Portfolio Health", "💼")
+            c1, c2 = st.columns(2)
+            with c1:
+                kpi_tile("AUM", f"₹{prow['AUM (Rs Cr)']:.1f} Cr", "Customers acquired")
+                kpi_tile("Bounce %", f"{prow['AUM Bounce %']:.1f}%", "Portfolio")
+                kpi_tile("30+ DPD", f"{prow['30+ DPD %']:.1f}%", "Delinquency")
+                kpi_tile("EMI Eff.", f"{prow['EMI Collection Efficiency %']:.1f}%", "Collection")
+            with c2:
+                kpi_tile("Exit Rate", f"{prow['Exit Rate %']:.1f}%", "Customers leaving")
+                kpi_tile("Avg LTV", f"{prow['Avg LTV %']:.1f}%", "Portfolio")
+                kpi_tile("NPA %", f"{prow['NPA %']:.2f}%", "Non-performing")
+                kpi_tile("Portfolio IRR", f"{prow['Portfolio IRR %']:.2f}%", "Yield")
+
+        if not port.empty:
+            section("Asset Type Mix", "🏷️")
+            asset_mix = port.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
+            fig = px.pie(asset_mix, names="Asset Type", values="POS (Rs Cr)",
+                         color_discrete_sequence=ARKA_PALETTE)
+            apply_plotly_theme(fig, height=270)
+            st.plotly_chart(fig, use_container_width=True)
+
+            section("PAR Bucket Distribution", "📊")
+            par_mix = port.groupby("PAR Bucket")["POS (Rs Cr)"].sum().reset_index()
+            par_order = ["Current", "1-30 DPD", "31-60 DPD", "61-90 DPD", "90+ DPD"]
+            par_mix["PAR Bucket"] = pd.Categorical(par_mix["PAR Bucket"], categories=par_order, ordered=True)
+            par_mix = par_mix.sort_values("PAR Bucket")
+            fig = px.bar(par_mix, x="PAR Bucket", y="POS (Rs Cr)",
+                         color="PAR Bucket",
+                         color_discrete_sequence=["#1FA89A","#5BAFA8","#D4936B","#E6B998","#C8553D"])
+            apply_plotly_theme(fig, height=240)
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+
+# =============================================================================
+# TEAM LEADER (ABM) and SENIOR LEADERSHIP (RBM/ZH/BH) — same structure
+# =============================================================================
+def render_leader(user, data, product_override=None):
+    perf = scope_data(data["perf"], user, product_override)
+    prof = scope_data(data["prof"], user, product_override)
+    port = scope_data(data["port"], user, product_override)
 
     if perf.empty:
         st.warning("No team data found for your profile.")
         return
 
-    section(f"My Team — {user['product']} Snapshot", "👥")
-    n_rms = perf["Emp ID"].nunique()
-    total_disb = int(perf["Actual Disb #"].sum())
-    total_tgt = int(perf["Target Disb #"].sum())
-    aum_total = prof["AUM (Rs Cr)"].sum() if not prof.empty else 0
+    tab_focus, tab_perf, tab_port, tab_prof = st.tabs(
+        ["🎯 Focus", "📊 Performance", "💼 Portfolio", "💵 Profitability"]
+    )
 
-    c1, c2 = st.columns(2)
-    with c1:
-        kpi_tile("RMs Reporting", f"{n_rms}", "Active")
-        kpi_tile("Team Disb #", f"{total_disb}", f"Tgt {total_tgt}",
-                 trend=(total_disb - total_tgt) / max(1, total_tgt) * 100)
-    with c2:
-        kpi_tile("Team AUM", f"₹{aum_total:.1f} Cr", "Total book")
-        kpi_tile("Avg Conv.", f"{perf['Actual Conversion %'].mean():.1f}%", "Login→Disb")
+    # ─── FOCUS TAB — escalations + low performers ────────────────────────
+    with tab_focus:
+        section("Focus of the Month", "🎯")
+        st.caption("Low-performing RMs with vintage > 3 months — need attention")
+        low_perf = perf[
+            (perf["Actual Disb #"] < perf["Target Disb #"] * 0.6) &
+            (perf["M-3 Disb #"] > 0)
+        ][["EMP Name", "Actual Disb #", "Target Disb #",
+           "M-1 Disb #", "M-2 Disb #", "M-3 Disb #"]].head(10)
+        if low_perf.empty:
+            st.success("✅ No low performers flagged this month.")
+        else:
+            low_perf = low_perf.rename(columns={"EMP Name": "RM"})
+            st.dataframe(low_perf, use_container_width=True, hide_index=True)
 
-    section("Focus of the Month", "🎯")
-    st.caption("Low-performing RMs with vintage > 3 months — need attention")
-    low_perf = perf[
-        (perf["Actual Disb #"] < perf["Target Disb #"] * 0.6) &
-        (perf["M-3 Disb #"] > 0)
-    ][["EMP Name", "Actual Disb #", "Target Disb #", "M-1 Disb #", "M-2 Disb #", "M-3 Disb #"]].head(10)
-    if low_perf.empty:
-        st.success("✅ No low performers flagged this month.")
-    else:
-        low_perf = low_perf.rename(columns={"EMP Name": "RM"})
-        st.dataframe(low_perf, use_container_width=True, hide_index=True)
-
-    section("Escalation Tracker", "🚨")
-    st.caption("RMs (vintage > 3M) with zero disbursement — auto-escalation")
-    zero_disb = perf[perf["Actual Disb #"] == 0].copy()
-    if not zero_disb.empty:
-        def escalate(r):
-            zeros = sum(1 for m in [r["M-1 Disb #"], r["M-2 Disb #"], r["M-3 Disb #"]] if m == 0)
-            if zeros == 0: return ("Month 1 — AMBER", "amber", "Visible to ABM")
-            elif zeros == 1: return ("Month 2 — AMBER", "amber", "Escalated to RBM")
-            elif zeros == 2: return ("Month 3 — RED", "red", "Escalated to ZH")
-            else: return ("Critical — RED", "red", "Visible to Business Head")
-        zero_disb[["Status", "Kind", "Visible To"]] = zero_disb.apply(
-            lambda r: pd.Series(escalate(r)), axis=1)
-        for _, r in zero_disb.head(8).iterrows():
-            chip = status_chip(r["Status"], r["Kind"])
-            st.markdown(
-                f'<div class="kpi-card" style="padding:10px 12px;">'
-                f'<b>{r["EMP Name"]}</b> &nbsp;{chip}<br>'
-                f'<span class="kpi-sub">{r["Visible To"]} · '
-                f'M-1: {int(r["M-1 Disb #"])} | M-2: {int(r["M-2 Disb #"])} | '
-                f'M-3: {int(r["M-3 Disb #"])}</span></div>',
-                unsafe_allow_html=True)
-    else:
-        st.success("✅ All RMs have disbursed this month.")
-
-    section("Leaderboard — Disbursements", "🏆")
-    lb = perf.sort_values("Actual Disb #", ascending=False).head(10)[
-        ["EMP Name", "Actual Disb #", "Target Disb #", "Actual Conversion %", "IRR Mix %"]
-    ].rename(columns={"EMP Name": "RM", "Actual Disb #": "Disb",
-                       "Target Disb #": "Tgt", "Actual Conversion %": "Conv%",
-                       "IRR Mix %": "IRR%"})
-    st.dataframe(lb, use_container_width=True, hide_index=True)
-
-    section("Leaderboard — IRR Mix", "💰")
-    irr_lb = perf.sort_values("IRR Mix %", ascending=False).head(10)[
-        ["EMP Name", "IRR Mix %", "Actual Disb #", "LTV %"]
-    ].rename(columns={"EMP Name": "RM", "IRR Mix %": "IRR%", "Actual Disb #": "Disb"})
-    st.dataframe(irr_lb, use_container_width=True, hide_index=True)
-
-    section("Nudge an RM", "✉️")
-    bottom = perf.sort_values("Actual Disb #").head(15)
-    rm_pick = st.selectbox("Pick RM to nudge", bottom["EMP Name"].tolist(), key="nudge_pick")
-    if rm_pick:
-        rm_row = bottom[bottom["EMP Name"] == rm_pick].iloc[0]
-        rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkafincap.com"
-        body = (
-            f"Hi {rm_pick},\n\n"
-            f"Your current month performance shows {int(rm_row['Actual Disb #'])} "
-            f"disbursements against a target of {int(rm_row['Target Disb #'])}. "
-            f"Your conversion stands at {rm_row['Actual Conversion %']:.1f}% "
-            f"vs target {rm_row['Target Conversion %']:.1f}%.\n\n"
-            f"Please prioritise pipeline closure this week. Let's discuss in our next 1:1.\n\n"
-            f"Regards,\n{user['name']}"
-        )
-        cc = [f"rbm.{user['region'].lower().replace(' ', '')}@arkafincap.com",
-              f"zh.{user['zone'].lower()}@arkafincap.com"]
-        link = mailto_link(rm_email, f"Performance Nudge — {rm_pick}", body, cc)
-        st.markdown(f'<a href="{link}" style="text-decoration:none;"><button style="width:100%;'
-                    f'background:#0F3D3E;color:white;border:none;padding:12px;'
-                    f'border-radius:10px;font-family:Sora,sans-serif;font-weight:600;'
-                    f'font-size:14px;cursor:pointer;letter-spacing:0.3px;">'
-                    f'📧 Open Email — Nudge {rm_pick}</button></a>',
+        section("Escalation Tracker", "🚨")
+        st.caption("RMs with zero disbursement — auto-escalation ladder")
+        zero_disb = perf[perf["Actual Disb #"] == 0].copy()
+        if not zero_disb.empty:
+            def escalate(r):
+                zeros = sum(1 for m in [r["M-1 Disb #"], r["M-2 Disb #"], r["M-3 Disb #"]] if m == 0)
+                if zeros == 0: return ("Month 1 — AMBER", "amber", "Visible to ABM")
+                elif zeros == 1: return ("Month 2 — AMBER", "amber", "Escalated to RBM")
+                elif zeros == 2: return ("Month 3 — RED", "red", "Escalated to ZH")
+                else: return ("Critical — RED", "red", "Visible to Business Head")
+            zero_disb[["Status", "Kind", "Visible To"]] = zero_disb.apply(
+                lambda r: pd.Series(escalate(r)), axis=1)
+            for _, r in zero_disb.head(10).iterrows():
+                chip = status_chip(r["Status"], r["Kind"])
+                st.markdown(
+                    f'<div class="kpi-card" style="padding:10px 12px;">'
+                    f'<b>{r["EMP Name"]}</b> &nbsp;{chip}<br>'
+                    f'<span class="kpi-sub">{r["Visible To"]} · '
+                    f'M-1: {int(r["M-1 Disb #"])} | M-2: {int(r["M-2 Disb #"])} | '
+                    f'M-3: {int(r["M-3 Disb #"])}</span></div>',
                     unsafe_allow_html=True)
+        else:
+            st.success("✅ All RMs have disbursed this month.")
 
-    if len(perf) >= 2:
-        section("Peer Leaderboard", "👥")
-        st.caption("Disbursement, 3-month avg, and IRR — peer comparison")
-        peer = perf.copy()
-        peer["3M Avg Disb"] = (peer["M-1 Disb #"] + peer["M-2 Disb #"] + peer["M-3 Disb #"]) / 3
-        peer = peer.sort_values("Actual Disb #", ascending=False)
-        show = peer[["EMP Name", "Actual Disb #", "3M Avg Disb", "IRR Mix %"]].head(15)
-        show = show.rename(columns={"EMP Name": "RM", "Actual Disb #": "Disb", "IRR Mix %": "IRR%"})
-        show["3M Avg Disb"] = show["3M Avg Disb"].round(1)
-        st.dataframe(show, use_container_width=True, hide_index=True)
+        section("Quick Nudge", "✉️")
+        bottom = perf.sort_values("Actual Disb #").head(15)
+        rm_pick = st.selectbox("Pick RM to nudge", bottom["EMP Name"].tolist(), key="nudge_pick")
+        if rm_pick:
+            rm_row = bottom[bottom["EMP Name"] == rm_pick].iloc[0]
+            rm_email = f"{rm_pick.lower().replace(' ', '.')}@arkafincap.com"
+            body = (
+                f"Hi {rm_pick},\n\n"
+                f"Your current month performance shows {int(rm_row['Actual Disb #'])} "
+                f"disbursements against a target of {int(rm_row['Target Disb #'])}. "
+                f"Your conversion stands at {rm_row['Actual Conversion %']:.1f}% "
+                f"vs target {rm_row['Target Conversion %']:.1f}%.\n\n"
+                f"Please prioritise pipeline closure this week. Let's discuss in our next 1:1.\n\n"
+                f"Regards,\n{user['name']}"
+            )
+            cc = [f"rbm.{user.get('region','').lower().replace(' ', '')}@arkafincap.com",
+                  f"zh.{user.get('zone','').lower()}@arkafincap.com"]
+            link = mailto_link(rm_email, f"Performance Nudge — {rm_pick}", body, cc)
+            st.markdown(f'<a href="{link}" style="text-decoration:none;"><button style="width:100%;'
+                        f'background:#0F3D3E;color:white;border:none;padding:12px;'
+                        f'border-radius:10px;font-family:Sora,sans-serif;font-weight:600;'
+                        f'font-size:14px;cursor:pointer;letter-spacing:0.3px;">'
+                        f'📧 Open Email — Nudge {rm_pick}</button></a>',
+                        unsafe_allow_html=True)
+
+    # ─── PERFORMANCE TAB ──────────────────────────────────────────────────
+    with tab_perf:
+        section("Team Snapshot", "👥")
+        n_rms = perf["Emp ID"].nunique()
+        total_disb = int(perf["Actual Disb #"].sum())
+        total_tgt = int(perf["Target Disb #"].sum())
+        disb_amt = perf["Actual Disb Amount (Rs Cr)"].sum()
+
+        c1, c2 = st.columns(2)
+        with c1:
+            kpi_tile("RMs", f"{n_rms}", "Active")
+            kpi_tile("Disb #", f"{total_disb}", f"Tgt {total_tgt}",
+                     trend=(total_disb - total_tgt) / max(1, total_tgt) * 100)
+        with c2:
+            kpi_tile("Disb Amount", f"₹{disb_amt:.1f} Cr", "MTD")
+            kpi_tile("Avg Conv.", f"{perf['Actual Conversion %'].mean():.1f}%", "Login→Disb")
+
+        section("Leaderboard — Disbursements", "🏆")
+        lb = perf.sort_values("Actual Disb #", ascending=False).head(10)[
+            ["EMP Name", "Actual Disb #", "Target Disb #", "Actual Conversion %", "IRR Mix %"]
+        ].rename(columns={"EMP Name": "RM", "Actual Disb #": "Disb",
+                           "Target Disb #": "Tgt", "Actual Conversion %": "Conv%",
+                           "IRR Mix %": "IRR%"})
+        st.dataframe(lb, use_container_width=True, hide_index=True)
+
+        section("Leaderboard — IRR Mix", "💰")
+        irr_lb = perf.sort_values("IRR Mix %", ascending=False).head(10)[
+            ["EMP Name", "IRR Mix %", "Actual Disb #", "LTV %"]
+        ].rename(columns={"EMP Name": "RM", "IRR Mix %": "IRR%",
+                           "Actual Disb #": "Disb"})
+        st.dataframe(irr_lb, use_container_width=True, hide_index=True)
+
+        if len(perf) >= 2:
+            section("Peer Leaderboard — 3M Avg", "👥")
+            peer = perf.copy()
+            peer["3M Avg Disb"] = (peer["M-1 Disb #"] + peer["M-2 Disb #"] + peer["M-3 Disb #"]) / 3
+            peer = peer.sort_values("Actual Disb #", ascending=False)
+            show = peer[["EMP Name", "Actual Disb #", "3M Avg Disb", "IRR Mix %"]].head(15)
+            show = show.rename(columns={"EMP Name": "RM", "Actual Disb #": "Disb", "IRR Mix %": "IRR%"})
+            show["3M Avg Disb"] = show["3M Avg Disb"].round(1)
+            st.dataframe(show, use_container_width=True, hide_index=True)
+
+        # Region/Zone breakdown for senior leadership
+        if user["level"] in ("RBM", "ZH", "CXO"):
+            section("Performance by Region", "🗺️")
+            region_perf = perf.groupby("Region").agg(
+                Disb=("Actual Disb #", "sum"),
+                Target=("Target Disb #", "sum"),
+                DisbAmt=("Actual Disb Amount (Rs Cr)", "sum"),
+            ).reset_index()
+            region_perf["Ach %"] = (region_perf["Disb"] / region_perf["Target"] * 100).round(1)
+            st.dataframe(region_perf, use_container_width=True, hide_index=True)
+            fig = px.bar(region_perf, x="Region", y=["Disb", "Target"], barmode="group",
+                         color_discrete_sequence=["#1FA89A", "#D4936B"])
+            apply_plotly_theme(fig, height=260)
+            st.plotly_chart(fig, use_container_width=True)
+
+            section("Top & Bottom ABMs", "🏆")
+            abm_perf = perf.groupby(["ABM Name"]).agg(
+                Disb=("Actual Disb #", "sum"),
+                Target=("Target Disb #", "sum"),
+            ).reset_index()
+            abm_perf["Ach %"] = (abm_perf["Disb"] / abm_perf["Target"] * 100).round(1)
+            st.write("**Top 5**")
+            st.dataframe(abm_perf.nlargest(5, "Ach %"), use_container_width=True, hide_index=True)
+            st.write("**Bottom 5**")
+            st.dataframe(abm_perf.nsmallest(5, "Ach %"), use_container_width=True, hide_index=True)
+
+    # ─── PORTFOLIO TAB ────────────────────────────────────────────────────
+    with tab_port:
+        if not prof.empty:
+            section("Portfolio Health — Aggregate", "💼")
+            c1, c2 = st.columns(2)
+            with c1:
+                kpi_tile("Total AUM", f"₹{prof['AUM (Rs Cr)'].sum():.1f} Cr", "Book")
+                kpi_tile("Avg Bounce %", f"{prof['AUM Bounce %'].mean():.1f}%", "Team avg")
+                kpi_tile("Avg 30+ DPD", f"{prof['30+ DPD %'].mean():.1f}%", "Team avg")
+                kpi_tile("EMI Eff.", f"{prof['EMI Collection Efficiency %'].mean():.1f}%", "Collection")
+            with c2:
+                kpi_tile("Exit Rate", f"{prof['Exit Rate %'].mean():.1f}%", "Avg")
+                kpi_tile("Avg LTV", f"{prof['Avg LTV %'].mean():.1f}%", "Portfolio")
+                kpi_tile("NPA %", f"{prof['NPA %'].mean():.2f}%", "Team avg")
+                kpi_tile("Portfolio IRR", f"{prof['Portfolio IRR %'].mean():.2f}%", "Yield")
+
+        if not port.empty:
+            section("Asset Mix", "🏷️")
+            asset_mix = port.groupby("Asset Type")["POS (Rs Cr)"].sum().reset_index()
+            fig = px.pie(asset_mix, names="Asset Type", values="POS (Rs Cr)",
+                         color_discrete_sequence=ARKA_PALETTE)
+            apply_plotly_theme(fig, height=270)
+            st.plotly_chart(fig, use_container_width=True)
+
+    # ─── PROFITABILITY TAB ────────────────────────────────────────────────
+    with tab_prof:
+        if not prof.empty:
+            section("Profitability KPIs", "💵")
+            c1, c2 = st.columns(2)
+            with c1:
+                kpi_tile("AUM / RM", f"₹{prof['AUM/RM (Rs Cr)'].mean():.2f} Cr", "Avg")
+                kpi_tile("Branch PAT %", f"{prof['PAT % (Before HO Allocation)'].mean():.2f}%", "Pre-HO")
+            with c2:
+                kpi_tile("Disb / RM", f"₹{prof['Disb/RM (Rs Cr)'].mean():.2f} Cr", "Avg")
+                kpi_tile("Gross Margin", f"{prof['Gross Margin %'].mean():.2f}%", "Avg")
+
+            section("Path to 2% RoA", "🎯")
+            avg_pat = prof["PAT % (Before HO Allocation)"].mean()
+            avg_aum_per_rm = prof["AUM/RM (Rs Cr)"].mean()
+            avg_yield = prof["Yield %"].mean()
+            avg_cost = prof["Branch Cost (Rs Cr)"].mean()
+            recos = []
+            if avg_pat < 2.0:
+                gap = 2.0 - avg_pat
+                recos.append(f"📈 **Current PAT% is {avg_pat:.2f}%, gap to 2% RoA is {gap:.2f}pp.**")
+                if avg_aum_per_rm < 12:
+                    recos.append(f"• **AUM/RM lever**: Avg AUM/RM at ₹{avg_aum_per_rm:.1f}Cr. Push to ₹15Cr — adds ~{(15-avg_aum_per_rm)*avg_yield/100:.2f}% to margin.")
+                if avg_yield < 15:
+                    recos.append(f"• **Yield lever**: Avg yield {avg_yield:.2f}%. Shift mix to higher-IRR products — adds ~0.5–1pp.")
+                if avg_cost > 1.5:
+                    recos.append(f"• **Cost lever**: Avg branch cost ₹{avg_cost:.2f}Cr. Trim 10% via shared services — adds ~{avg_cost*0.1:.2f}pp.")
+            else:
+                recos.append(f"✅ Already at {avg_pat:.2f}% — above 2% RoA target.")
+            for r in recos:
+                st.markdown(r)
+
+            section("Active Escalations Roll-up", "🚨")
+            zero = perf[perf["Actual Disb #"] == 0]
+            n_amber = len(zero[zero["M-1 Disb #"] > 0])
+            n_red = len(zero[(zero["M-1 Disb #"] == 0) & (zero["M-2 Disb #"] == 0)])
+            c1, c2 = st.columns(2)
+            with c1:
+                kpi_tile("Amber Alerts", f"{n_amber}", "1st-2nd month zero")
+            with c2:
+                kpi_tile("Red Alerts", f"{n_red}", "3+ month zero")
 
 
-def render_senior_leadership(user, data):
-    perf = scope_data(data["perf"], user)
-    prof = scope_data(data["prof"], user)
-    port = scope_data(data["port"], user)
+# =============================================================================
+# CXO / CENTRAL — SRL view with STLAP / Wheels sub-toggle
+# =============================================================================
+def render_cxo(user, data):
+    # SRL sub-toggle at the top
+    section("Product View", "🎛️")
+    product_view = st.radio(
+        "Product",
+        ["SRL", "STLAP", "Wheels"],
+        horizontal=True,
+        key="cxo_product_view",
+        label_visibility="collapsed",
+    )
 
-    if perf.empty:
-        st.warning("No data for your scope.")
-        return
+    # Update brand bar chip — but we've already rendered it.
+    # Workaround: render small status line indicating current view
+    st.markdown(f'<div style="font-family:Inter,sans-serif;font-size:11px;color:#6B8788;'
+                f'margin:-4px 0 8px 2px;">Currently viewing: <b style="color:#0F3D3E;">'
+                f'{product_view}</b> {"(STLAP + Wheels combined)" if product_view=="SRL" else ""}</div>',
+                unsafe_allow_html=True)
 
-    if user["level"] == "CXO":
-        prod_filter = st.radio("Product View", ["Both", "STLAP", "Wheels"],
-                               horizontal=True, key="prod_filter")
-        if prod_filter != "Both":
-            perf = perf[perf["Product"] == prod_filter]
-            prof = prof[prof["Product"] == prod_filter]
-            port = port[port["Product"] == prod_filter]
-
-    scope_label = user["product"] if user["product"] != "Both" else "All Products"
-
-    section(f"Business Snapshot — {scope_label}", "🏢")
-    c1, c2 = st.columns(2)
-    with c1:
-        kpi_tile("Total RMs", f"{perf['Emp ID'].nunique()}", "Active")
-        kpi_tile("Total Disb #", f"{int(perf['Actual Disb #'].sum())}",
-                 f"Tgt {int(perf['Target Disb #'].sum())}")
-        kpi_tile("Disb Amount", f"₹{perf['Actual Disb Amount (Rs Cr)'].sum():.0f} Cr", "MTD")
-    with c2:
-        kpi_tile("Total AUM", f"₹{prof['AUM (Rs Cr)'].sum():.0f} Cr", "Book size")
-        kpi_tile("Avg Yield", f"{prof['Yield %'].mean():.2f}%", "Portfolio")
-        kpi_tile("NPA %", f"{prof['NPA %'].mean():.2f}%", "Avg")
-
-    section("Profitability — Branch & Above", "💵")
-    c1, c2 = st.columns(2)
-    with c1:
-        kpi_tile("AUM / RM", f"₹{prof['AUM/RM (Rs Cr)'].mean():.2f} Cr", "Avg")
-        kpi_tile("Branch PAT %", f"{prof['PAT % (Before HO Allocation)'].mean():.2f}%", "Before HO alloc.")
-    with c2:
-        kpi_tile("Disb / RM", f"₹{prof['Disb/RM (Rs Cr)'].mean():.2f} Cr", "Avg")
-        kpi_tile("Gross Margin", f"{prof['Gross Margin %'].mean():.2f}%", "Avg")
-
-    section("Path to 2% RoA — Recommendation", "🎯")
-    avg_pat = prof["PAT % (Before HO Allocation)"].mean()
-    avg_aum_per_rm = prof["AUM/RM (Rs Cr)"].mean()
-    avg_yield = prof["Yield %"].mean()
-    avg_cost = prof["Branch Cost (Rs Cr)"].mean()
-    recos = []
-    if avg_pat < 2.0:
-        gap = 2.0 - avg_pat
-        recos.append(f"📈 **Current PAT% is {avg_pat:.2f}%, gap to 2% RoA is {gap:.2f}pp.**")
-        if avg_aum_per_rm < 12:
-            recos.append(f"• **AUM/RM lever**: Avg AUM/RM at ₹{avg_aum_per_rm:.1f}Cr. Push to ₹15Cr — adds ~{(15-avg_aum_per_rm)*avg_yield/100:.2f}% to margin.")
-        if avg_yield < 15:
-            recos.append(f"• **Yield lever**: Avg yield {avg_yield:.2f}%. Shift mix to higher-IRR products — adds ~0.5–1pp.")
-        if avg_cost > 1.5:
-            recos.append(f"• **Cost lever**: Avg branch cost ₹{avg_cost:.2f}Cr. Trim 10% via shared services — adds ~{avg_cost*0.1:.2f}pp.")
-    else:
-        recos.append(f"✅ Already at {avg_pat:.2f}% — above 2% RoA target.")
-    for r in recos:
-        st.markdown(r)
-
-    if user["level"] in ("ZH", "CXO"):
-        section("Performance by Region", "🗺️")
-        region_perf = perf.groupby("Region").agg(
-            Disb=("Actual Disb #", "sum"),
-            Target=("Target Disb #", "sum"),
-            DisbAmt=("Actual Disb Amount (Rs Cr)", "sum"),
-        ).reset_index()
-        region_perf["Achievement %"] = (region_perf["Disb"] / region_perf["Target"] * 100).round(1)
-        st.dataframe(region_perf, use_container_width=True, hide_index=True)
-        fig = px.bar(region_perf, x="Region", y=["Disb", "Target"], barmode="group",
-                     color_discrete_sequence=["#1FA89A", "#D4936B"])
-        apply_plotly_theme(fig, height=280)
-        st.plotly_chart(fig, use_container_width=True)
-
-    section("Top & Bottom ABMs", "🏆")
-    abm_perf = perf.groupby(["ABM Name"]).agg(
-        Disb=("Actual Disb #", "sum"),
-        Target=("Target Disb #", "sum"),
-        AUM=("Actual Disb Amount (Rs Cr)", "sum"),
-    ).reset_index()
-    abm_perf["Ach %"] = (abm_perf["Disb"] / abm_perf["Target"] * 100).round(1)
-    st.write("**Top 5**")
-    st.dataframe(abm_perf.nlargest(5, "Ach %"), use_container_width=True, hide_index=True)
-    st.write("**Bottom 5**")
-    st.dataframe(abm_perf.nsmallest(5, "Ach %"), use_container_width=True, hide_index=True)
-
-    section("Active Escalations", "🚨")
-    zero = perf[perf["Actual Disb #"] == 0]
-    n_amber = len(zero[zero["M-1 Disb #"] > 0])
-    n_red = len(zero[(zero["M-1 Disb #"] == 0) & (zero["M-2 Disb #"] == 0)])
-    c1, c2 = st.columns(2)
-    with c1:
-        kpi_tile("Amber Alerts", f"{n_amber}", "1st-2nd month zero disb")
-    with c2:
-        kpi_tile("Red Alerts", f"{n_red}", "3+ month zero disb")
+    # Reuse the leader layout with product_override
+    render_leader(user, data, product_override=product_view)
 
 
+# =============================================================================
+# ADMIN
+# =============================================================================
 def render_admin(user, data):
     section("Admin Console", "⚙️")
     st.caption("Upload data, dispatch nudges, manage user access.")
@@ -1014,22 +1054,12 @@ def render_admin(user, data):
 
 
 # =============================================================================
-# LOGIN — Concept 2: Bilingual Welcome
+# LOGIN
 # =============================================================================
 def login_screen():
-    # Wrap the entire login in a styled container with brand triangles
     st.markdown("""
     <div class="login-page">
-      <div class="tri-1"></div>
-      <div class="tri-2"></div>
-      <div class="tri-3"></div>
-
       <div class="logo-block">
-        <div class="logo-mark">
-          <span class="lt-1"></span>
-          <span class="lt-2"></span>
-          <span class="lt-3"></span>
-        </div>
         <div class="logo-wordmark">ARKA<span class="kinetiq">KinetiQ</span></div>
         <div class="logo-tag">INTELLIGENCE IN MOTION</div>
       </div>
@@ -1047,7 +1077,7 @@ def login_screen():
     """, unsafe_allow_html=True)
 
     with st.form("login_form", clear_on_submit=False):
-        username = st.text_input("Username", placeholder="e.g. rm.3001",
+        username = st.text_input("Employee ID", placeholder="e.g. rm.3001",
                                  label_visibility="visible")
         password = st.text_input("Password", type="password",
                                  placeholder="Demo: arkin@2026",
@@ -1060,7 +1090,7 @@ def login_screen():
                 st.session_state["username"] = username.strip().lower()
                 st.rerun()
             else:
-                st.error("❌ Invalid username or password.")
+                st.error("❌ Invalid Employee ID or password.")
 
     st.markdown("""
       </div>
@@ -1076,19 +1106,19 @@ def login_screen():
         st.markdown(f"""
 **Password for all demo accounts:** `{DEMO_PASSWORD}`
 
-| Username | Role | Product |
+| Employee ID | Role | Product |
 |---|---|---|
 | `rm.3001` | Sales Manager | STLAP |
 | `rm.4001` | Sales Manager | Wheels |
-| `abm.2001` | Team Leader | STLAP |
-| `abm.2101` | Team Leader | Wheels |
+| `abm.2001` | Area Business Manager | STLAP |
+| `abm.2101` | Area Business Manager | Wheels |
 | `rbm.201` | Regional Business Manager | STLAP |
 | `rbm.216` | Regional Business Manager | Wheels |
 | `zh.131` | Zonal Head | STLAP |
 | `zh.135` | Zonal Head | Wheels |
-| `cxo` | CXO | Both |
-| `central` | Central Team | Both |
-| `admin` | System Admin | — |
+| `cxo` | CXO | SRL (STLAP + Wheels) |
+| `central` | Central Team | SRL |
+| `admin` | System Admin | SRL |
         """)
 
 
@@ -1102,7 +1132,6 @@ def main():
         login_screen()
         return
 
-    # Page wrap
     st.markdown('<div class="page">', unsafe_allow_html=True)
 
     user = st.session_state["user"]
@@ -1122,9 +1151,11 @@ def main():
     if level == "RM":
         render_sales_manager(user, data)
     elif level == "ABM":
-        render_team_leader(user, data)
-    elif level in ("RBM", "ZH", "CXO"):
-        render_senior_leadership(user, data)
+        render_leader(user, data)
+    elif level in ("RBM", "ZH"):
+        render_leader(user, data)
+    elif level == "CXO":
+        render_cxo(user, data)
     elif level == "Admin":
         render_admin(user, data)
 
