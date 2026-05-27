@@ -66,8 +66,27 @@ section[data-testid="stMain"]      { padding-top: 0 !important; }
     --sh-md:  0 4px 12px rgba(15,61,62,.08);
     --sh-lg:  0 12px 32px rgba(15,61,62,.12);
 }
-.stApp { background: var(--cream) !important; font-family:'Inter',sans-serif; color:var(--ink1); }
-.block-container,[data-testid="stMainBlockContainer"] { background:var(--cream) !important; }
+.stApp {
+    background: linear-gradient(180deg,
+        #0F3D3E 0%,
+        #12504f 6%,
+        #1a7e7d 14%,
+        #6bbfbe 24%,
+        #b8e4e3 33%,
+        #daf0ef 42%,
+        #edf8f7 54%,
+        #F6F8F8 68%,
+        #F6F8F8 100%
+    ) !important;
+    background-attachment: fixed !important;
+    font-family:'Inter',sans-serif;
+    color:var(--ink1);
+}
+/* Make containers transparent so gradient shows through */
+.block-container,
+[data-testid="stMainBlockContainer"],
+section[data-testid="stMain"],
+[data-testid="stAppViewContainer"] { background: transparent !important; }
 .page { padding: 0 14px 80px; }
 
 /* ══ HIDE SIDEBAR & HAMBURGER ═══════════════════════════════════════════════ */
@@ -127,9 +146,11 @@ button[kind="header"] { display: none !important; }
     color: #0F3D3E !important;
 }
 [data-testid="stSelectbox"] [data-baseweb="select"] {
-    background: #fff !important;
+    background: rgba(255,255,255,0.88) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
     border-radius: 10px !important;
-    border: 1.5px solid #E5EAEA !important;
+    border: 1.5px solid rgba(255,255,255,0.6) !important;
 }
 [data-testid="stSelectbox"] [data-baseweb="select"] div {
     background: #fff !important;
@@ -144,7 +165,7 @@ button[kind="header"] { display: none !important; }
 }
 
 /* ══ KPI TILES ══════════════════════════════════════════════════════════════ */
-.kpi-card  { background:#fff; border-radius:12px; padding:12px 13px; border:1px solid var(--line); box-shadow:var(--sh-sm); margin-bottom:8px; }
+.kpi-card  { background:rgba(255,255,255,0.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-radius:12px; padding:12px 13px; border:1px solid rgba(255,255,255,0.6); box-shadow:0 2px 12px rgba(15,61,62,0.10); margin-bottom:8px; }
 .kpi-label { font-size:10px; font-weight:600; color:var(--ink3); text-transform:uppercase; letter-spacing:.6px; }
 .kpi-value { font-family:'Sora',sans-serif; font-size:22px; font-weight:700; color:var(--ink1); margin:4px 0; line-height:1.1; }
 .kpi-sub   { font-size:11px; color:var(--ink3); font-weight:500; }
@@ -152,10 +173,10 @@ button[kind="header"] { display: none !important; }
 .kpi-down  { color:#C8553D; font-size:12px; }
 
 /* ══ INFO CARDS ══════════════════════════════════════════════════════════════ */
-.nudge-card    { background:var(--cop-bg); border-left:3px solid var(--copper); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#6B3F1F; }
-.announce-card { background:var(--teal-bg); border-left:3px solid var(--teal2); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:var(--teal); }
-.action-card   { background:#FDECEA; border-left:3px solid #C8553D; padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#7A1F0E; }
-.esc-card      { background:#fff; border-radius:10px; border:1px solid var(--line); padding:10px 12px; margin-bottom:8px; box-shadow:var(--sh-sm); }
+.nudge-card    { background:rgba(253,244,237,0.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-left:3px solid var(--copper); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#6B3F1F; }
+.announce-card { background:rgba(230,244,242,0.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-left:3px solid var(--teal2); padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:var(--teal); }
+.action-card   { background:rgba(253,236,234,0.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-left:3px solid #C8553D; padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:13px; line-height:1.5; color:#7A1F0E; }
+.esc-card      { background:rgba(255,255,255,0.82); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-radius:10px; border:1px solid rgba(255,255,255,0.6); padding:10px 12px; margin-bottom:8px; box-shadow:0 2px 12px rgba(15,61,62,0.10); }
 
 /* ══ STATUS CHIPS ════════════════════════════════════════════════════════════ */
 .chip-amber { background:var(--cop-bg); color:#6B3F1F; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; }
@@ -187,7 +208,7 @@ button[kind="header"] { display: none !important; }
 }
 
 /* ══ TABS ════════════════════════════════════════════════════════════════════ */
-.stTabs [data-baseweb="tab-list"] { gap:4px; background:#fff; border-radius:10px; padding:4px; border:1px solid var(--line); }
+.stTabs [data-baseweb="tab-list"] { gap:4px; background:rgba(255,255,255,0.80); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-radius:10px; padding:4px; border:1px solid rgba(255,255,255,0.55); }
 .stTabs [data-baseweb="tab"] {
     font-family:'Sora',sans-serif !important; font-size:12px !important; font-weight:600 !important;
     color:var(--ink3) !important; padding:8px 4px !important; border-radius:8px !important;
@@ -198,7 +219,7 @@ button[kind="header"] { display: none !important; }
 .stTabs [data-baseweb="tab-highlight"] { display:none; }
 
 /* ══ RADIO ═══════════════════════════════════════════════════════════════════ */
-.stRadio > div { gap:4px !important; background:#fff; padding:4px; border-radius:10px; border:1px solid var(--line); display:flex !important; }
+.stRadio > div { gap:4px !important; background:rgba(255,255,255,0.80); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding:4px; border-radius:10px; border:1px solid rgba(255,255,255,0.55); display:flex !important; }
 .stRadio label { font-family:'Inter',sans-serif; font-size:13px; }
 
 /* ══ LOGIN ═══════════════════════════════════════════════════════════════════ */
