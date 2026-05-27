@@ -429,9 +429,9 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
        so window.top.location is both readable and writable from a user click. -->
   <button class="btn" onclick="
     try {{
-      window.top.location.href = window.top.location.pathname + '?logout=1';
+      window.parent.location.href = window.parent.location.pathname + '?logout=1';
     }} catch(e) {{
-      window.location.href = '/?logout=1';
+      window.parent.location.href = '/?logout=1';
     }}
   ">🚪 Sign out</button>
 </div>
