@@ -101,51 +101,21 @@ button[kind="header"] { display: none !important; }
 .bb-meta  { font-family:'Inter',sans-serif; font-size:11px; opacity:.85; line-height:1.5; }
 .bb-chip  { background:rgba(255,255,255,.15); color:#fff; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; margin-left:4px; }
 
-/* ══ BRAND BAR ROW — unify the two columns ══════════════════════════════════ */
-[data-testid="stHorizontalBlock"]:first-of-type {
-    gap: 0 !important;
-    margin-bottom: 4px !important;
-    align-items: stretch !important;
-}
-/* col1: contains the .brand-bar markdown — remove markdown wrapper padding */
-[data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:first-child {
-    padding: 0 !important;
-}
-[data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:first-child
-  [data-testid="stMarkdownContainer"] {
-    height: 100%;
-    line-height: 0;     /* removes extra space under the div */
-}
-/* col2: same dark bg as brand bar, right rounded corners, centres button */
-[data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:last-child {
-    background: var(--teal) !important;
-    border-radius: 0 14px 14px 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 8px 8px 8px 4px !important;
-    min-width: 76px !important;
-}
-/* Sign-out button inside col2 — white on dark */
-[data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:last-child
-  .stButton button {
-    background: rgba(255,255,255,.15) !important;
-    color: #fff !important;
-    border: 1.5px solid rgba(255,255,255,.45) !important;
-    border-radius: 10px !important;
-    font-family: 'Sora', sans-serif !important;
-    font-size: 10px !important;
+/* ══ SIGN OUT — red button beside month selector ════════════════════════════ */
+[data-testid="stHorizontalBlock"]:nth-of-type(1)
+  [data-testid="stColumn"]:last-child .stButton button {
+    background: #FDECEA !important;
+    color: #7A1F0E !important;
+    border: 1.5px solid #f5c6c0 !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
-    padding: 6px 6px !important;
-    height: auto !important;
-    line-height: 1.4 !important;
-    white-space: normal !important;
-    letter-spacing: .2px !important;
+    padding: 10px 8px !important;
 }
-[data-testid="stHorizontalBlock"]:first-of-type > [data-testid="stColumn"]:last-child
-  .stButton button:hover {
-    background: rgba(200,85,61,.75) !important;
-    border-color: rgba(200,85,61,.9) !important;
+[data-testid="stHorizontalBlock"]:nth-of-type(1)
+  [data-testid="stColumn"]:last-child .stButton button:hover {
+    background: #C8553D !important;
+    color: #fff !important;
+    border-color: #C8553D !important;
 }
 
 /* ══ MONTH SELECTOR — half width, explicit dark text ════════════════════════ */
@@ -372,10 +342,8 @@ def build_escalation_table(perf_all, user, prod_ov=None):
 
 
 # =============================================================================
-# BRAND BAR — uses st.components.v1.html() which has allow-top-navigation-by-user-activation
-# in its sandbox. This lets the Sign out button navigate window.top to ?logout=1.
-# Python detects this in main() via st.query_params and clears the session.
-# The button sits neatly inside the bar at top-right — no extra elements needed.
+# =============================================================================
+# BRAND BAR — info only, no button (sign out is beside the month selector)
 # =============================================================================
 def brand_bar(user, prod=None):
     p = prod or user["product"]
@@ -391,7 +359,6 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
     background:#0F3D3E;color:#fff;
     padding:13px 14px;border-radius:14px;
     position:relative;overflow:hidden;
-    display:flex;align-items:center;justify-content:space-between;
     font-family:'Inter',sans-serif;height:70px;width:100%;
 }}
 .bar::after{{
@@ -399,23 +366,12 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
     width:80px;height:80px;background:#D4936B;
     clip-path:polygon(50% 0%,100% 100%,0% 100%);opacity:.35;pointer-events:none;
 }}
-.inner{{position:relative;z-index:2;flex:1;min-width:0}}
+.inner{{position:relative;z-index:2}}
 .logo{{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}}
 .arka{{font-family:'Sora',sans-serif;font-weight:800;font-size:17px;letter-spacing:2px;color:#fff}}
 .kq  {{font-family:'Sora',sans-serif;font-weight:500;font-size:14px;font-style:italic;color:#D4936B}}
-.meta{{font-size:10.5px;opacity:.85;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.meta{{font-size:10.5px;opacity:.85;line-height:1.45}}
 .chip{{background:rgba(255,255,255,.15);color:#fff;padding:2px 7px;border-radius:10px;font-size:9px;font-weight:600;margin-left:4px}}
-.btn {{
-    position:relative;z-index:10;flex-shrink:0;margin-left:10px;
-    background:rgba(255,255,255,.15);
-    border:1.5px solid rgba(255,255,255,.45);
-    color:#fff;font-family:'Sora',sans-serif;
-    font-size:10.5px;font-weight:600;
-    padding:8px 13px;border-radius:10px;
-    cursor:pointer;white-space:nowrap;letter-spacing:.2px;
-    transition:background .15s,border-color .15s;
-}}
-.btn:hover{{background:rgba(200,85,61,.75);border-color:rgba(200,85,61,.9)}}
 </style>
 </head>
 <body>
@@ -424,16 +380,6 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
     <div class="logo"><span class="arka">ARKA</span><span class="kq">KinetiQ</span></div>
     <div class="meta">{user['name']} · {user['role']} · {user.get('zone','—')}<span class="chip">{p}</span></div>
   </div>
-  <!-- button onclick navigates window.top in the same tab.
-       st.components.v1.html() sandbox has allow-same-origin + allow-top-navigation-by-user-activation
-       so window.top.location is both readable and writable from a user click. -->
-  <button class="btn" onclick="
-    try {{
-      window.parent.location.href = window.parent.location.pathname + '?logout=1';
-    }} catch(e) {{
-      window.parent.location.href = '/?logout=1';
-    }}
-  ">🚪 Sign out</button>
 </div>
 </body>
 </html>"""
@@ -441,21 +387,28 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
 
 
 # =============================================================================
-# MONTH SELECTOR
-# - CSS constrains width to 220px (half the page) — no columns needed
-# - explicit index= so the correct month shows on first render
+# MONTH SELECTOR + SIGN OUT — real st.button always works, no JS/iframe needed
 # =============================================================================
 def month_selector(key="month_sel"):
     current = st.session_state.get(key, CURRENT_MONTH)
     if current not in MONTH_ORDER:
         current = CURRENT_MONTH
     default_idx = MONTH_ORDER.index(current)
-    return st.selectbox(
-        "📅 Viewing month",
-        MONTH_ORDER,
-        index=default_idx,
-        key=key,
-    )
+
+    col_month, col_btn = st.columns([3, 1])
+    with col_month:
+        selected = st.selectbox(
+            "📅 Viewing month",
+            MONTH_ORDER,
+            index=default_idx,
+            key=key,
+        )
+    with col_btn:
+        st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+        if st.button("🚪 Sign out", key="signout_btn", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+    return selected
 
 
 # =============================================================================
