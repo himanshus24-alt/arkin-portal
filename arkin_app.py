@@ -424,22 +424,17 @@ html,body{{background:transparent!important;height:72px;overflow:hidden;width:10
     <div class="logo"><span class="arka">ARKA</span><span class="kq">KinetiQ</span></div>
     <div class="meta">{user['name']} · {user['role']} · {user.get('zone','—')}<span class="chip">{p}</span></div>
   </div>
-  <!-- anchor with target="_top" is covered by allow-top-navigation-by-user-activation in the sandbox.
-       Script sets the href to the parent URL + ?logout=1 before the click fires.
-       Falls back to /?logout=1 if window.top is restricted. -->
-  <a id="so" href="#" target="_top" class="btn">🚪 Sign out</a>
-</div>
-<script>
-(function() {{
-    var a = document.getElementById('so');
+  <!-- button onclick navigates window.top in the same tab.
+       st.components.v1.html() sandbox has allow-same-origin + allow-top-navigation-by-user-activation
+       so window.top.location is both readable and writable from a user click. -->
+  <button class="btn" onclick="
     try {{
-        var path = window.top.location.pathname;
-        a.href = path + '?logout=1';
+      window.top.location.href = window.top.location.pathname + '?logout=1';
     }} catch(e) {{
-        a.href = '/?logout=1';
+      window.location.href = '/?logout=1';
     }}
-}})();
-</script>
+  ">🚪 Sign out</button>
+</div>
 </body>
 </html>"""
     components.html(html, height=74, scrolling=False)
