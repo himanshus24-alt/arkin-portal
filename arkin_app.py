@@ -212,19 +212,44 @@ section[data-testid="stMain"],[data-testid="stAppViewContainer"] { background: t
 @st.cache_data(ttl=300)
 def load_data():
     if not DATA_FILE.exists():
-        st.error(f"Data file not found: {DATA_FILE}")
+        st.error(
+            f"❌ Data file not found.\n\n"
+            f"Expected at: `{DATA_FILE}`\n\n"
+            f"Make sure `arkin_dummy_data.xlsx` (the **v2 file** from KinetiQ rebuild) "
+            f"is committed to your repo in the same folder as `arkin_app.py`."
+        )
         st.stop()
+
     xl = pd.ExcelFile(DATA_FILE)
-    d = {
+    available = set(xl.sheet_names)
+
+    # These four sheets are mandatory — give a clear error if the old v1 file was uploaded
+    REQUIRED = {"Performance", "Profitability", "Portfolio", "Org Hierarchy"}
+    missing = REQUIRED - available
+    if missing:
+        st.error(
+            f"❌ Wrong data file detected.\n\n"
+            f"**Missing sheets:** {', '.join(sorted(missing))}\n\n"
+            f"**Found sheets:** {', '.join(xl.sheet_names)}\n\n"
+            f"Please upload the **new** `arkin_dummy_data.xlsx` generated for KinetiQ v2 "
+            f"(7 sheets: Performance, Profitability, Portfolio, Attrition, Announcements, "
+            f"Incentive Grid, Org Hierarchy)."
+        )
+        st.stop()
+
+    # Optional sheets get an empty DataFrame if absent (app degrades gracefully)
+    def _parse(name):
+        return xl.parse(name) if name in available else pd.DataFrame()
+
+    return {
         "perf": xl.parse("Performance"),
         "prof": xl.parse("Profitability"),
         "port": xl.parse("Portfolio"),
-        "attr": xl.parse("Attrition"),
-        "ann":  xl.parse("Announcements"),
-        "grid": xl.parse("Incentive Grid"),
+        "attr": _parse("Attrition"),
+        "ann":  _parse("Announcements"),
+        "grid": _parse("Incentive Grid"),
         "org":  xl.parse("Org Hierarchy"),
     }
-    return d
 
 
 # =============================================================================
